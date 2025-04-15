@@ -12,16 +12,20 @@ function extractTextContent(doc) {
   const words = bodyText.split(/\s+/);
   const firstHundredWords = words.slice(0, 100).join(' ');
   
-  return firstHundredWords + (words.length > 100 ? '...' : '');
+  return {
+    content: firstHundredWords + (words.length > 100 ? '...' : ''),
+    wordcount: words.length};
 }
 
 // Function to clip the current page
 function clipCurrentPage() {
+  const { content, wordcount } = extractTextContent(document);
   const pageData = {
     title: document.title,
     url: window.location.href,
     timestamp: new Date().toISOString(),
-    content: extractTextContent(document)
+    content: content,
+    wordcount: wordcount
   };
   
   // Send the data to the background script
