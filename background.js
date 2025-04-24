@@ -8,7 +8,7 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
 // Set up message handling for content script communication
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'clipPage') {
+  if (message.action === 'extractAllLinks') {
     // Forward the clip request to the sidebar
     chrome.runtime.sendMessage({
       action: 'newClip',
@@ -26,15 +26,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Add a context menu item for clipping the current page
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
-    id: 'clipPage',
-    title: 'Clip this page',
+    id: 'extractAllLinks',
+    title: 'Extract All Hyperlinks',
     contexts: ['page']
   });
 });
 
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === 'clipPage') {
+  if (info.menuItemId === 'extractAllLinks') {
     // First check if content script is ready by sending a ping
     chrome.tabs.sendMessage(tab.id, { action: 'ping' }, (response) => {
       if (chrome.runtime.lastError) {
@@ -49,12 +49,12 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
           }
           // Now try to clip the page
           setTimeout(() => {
-            chrome.tabs.sendMessage(tab.id, { action: 'clipPage' });
+            chrome.tabs.sendMessage(tab.id, { action: 'extractAllLinks' });
           }, 100);
         });
       } else {
         // Content script is ready, clip the page
-        chrome.tabs.sendMessage(tab.id, { action: 'clipPage' });
+        chrome.tabs.sendMessage(tab.id, { action: 'extractAllLinks' });
       }
     });
   }
