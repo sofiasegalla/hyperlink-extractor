@@ -21,7 +21,7 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: 'extractAllLinks',
     title: 'Extract all links',
-    contexts: ['page']
+    contexts: ['page', 'selection']
   });
   chrome.contextMenus.create({
     id: 'extractLinksFromSelection',
