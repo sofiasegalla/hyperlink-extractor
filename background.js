@@ -6,58 +6,83 @@
 // Register the side panel
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
-// Set up message handling for content script communication
+// Relay extractor results into the sidebar
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'clipPage') {
-    // Forward the clip request to the sidebar
-    chrome.runtime.sendMessage({
-      action: 'newClip',
-      data: message.data
-    });
-    
-    // Always respond immediately, don't leave the promise hanging
+  const { action, data } = message;
+  if (action === 'extractAllLinks' || action === 'extractLinksFromSelection') {
+    console.log(`[Background] forwarding "${action}" to sidebar`, data);
+    chrome.runtime.sendMessage({ action, data });
     sendResponse({ success: true });
   }
-  
-  // Don't return true here, as we're not using asynchronous response
-  // This resolves the "message channel closed" error
 });
 
-// Add a context menu item for clipping the current page
+// Create two context-menu items on install
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
-    id: 'clipPage',
-    title: 'Clip this page',
-    contexts: ['page']
+    id: 'extractAllLinks',
+    title: 'Extract all links',
+    contexts: ['page', 'selection']
+  });
+  chrome.contextMenus.create({
+    id: 'extractLinksFromSelection',
+    title: 'Extract links from selection',
+    contexts: ['selection']
   });
 });
 
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === 'clipPage') {
-    // First check if content script is ready by sending a ping
-    chrome.tabs.sendMessage(tab.id, { action: 'ping' }, (response) => {
-      if (chrome.runtime.lastError) {
-        // Content script isn't ready, inject it
-        chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ['content.js']
-        }, () => {
-          if (chrome.runtime.lastError) {
-            console.error('Failed to inject content script:', chrome.runtime.lastError);
-            return;
-          }
-          // Now try to clip the page
-          setTimeout(() => {
-            chrome.tabs.sendMessage(tab.id, { action: 'clipPage' });
-          }, 100);
-        });
-      } else {
-        // Content script is ready, clip the page
-        chrome.tabs.sendMessage(tab.id, { action: 'clipPage' });
-      }
-    });
+  console.log('[Background] onClicked:', info, 'tab:', tab);
+  if (!tab?.id) {
+    console.warn('[Background] no valid tab ID—aborting');
+    return;
   }
+
+  let extractorAction = null;
+  if (info.menuItemId === 'extractAllLinks') {
+    extractorAction = 'extractAllLinks';
+  } else if (info.menuItemId === 'extractLinksFromSelection') {
+    extractorAction = 'extractLinksFromSelection';
+  } else {
+    console.log('[Background] clicked menuItemId not recognized—ignoring');
+    return;
+  }
+
+  // Build the message
+  const buildMessage = () => {
+    const msg = { action: extractorAction };
+    if (extractorAction === 'extractLinksFromSelection') {
+      msg.selectionText = info.selectionText;
+    }
+    console.log('[Background] sending to content script:', msg);
+    chrome.tabs.sendMessage(tab.id, msg);
+  };
+
+  // Ping to see if content.js is loaded
+  console.log('[Background] pinging content script in tab', tab.id);
+  chrome.tabs.sendMessage(tab.id, { action: 'ping' }, response => {
+    if (chrome.runtime.lastError) {
+      console.warn('[Background] ping failed:', chrome.runtime.lastError.message);
+      console.log('[Background] injecting content.js into tab', tab.id);
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['content.js']
+      }, () => {
+        if (chrome.runtime.lastError) {
+          console.error('[Background] injection failed:', chrome.runtime.lastError);
+          return;
+        }
+        console.log('[Background] content.js injected successfully');
+        setTimeout(() => {
+          console.log('[Background] now sending extract message post-injection');
+          buildMessage();
+        }, 100);
+      });
+    } else {
+      console.log('[Background] ping succeeded, content.js is ready');
+      buildMessage();
+    }
+  });
 });
 
-console.log('Webpage Clipper background script loaded');
+console.log('[Background] Webpage Clipper (link-extractor) background script loaded');
