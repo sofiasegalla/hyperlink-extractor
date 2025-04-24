@@ -11,7 +11,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const { action, data } = message;
   if (action === 'extractAllLinks' || action === 'extractLinksFromSelection') {
     console.log(`[Background] forwarding "${action}" to sidebar`, data);
-    chrome.runtime.sendMessage({ action, data });
+    chrome.runtime.sendMessage({ action: 'newClip', data });
     sendResponse({ success: true });
   }
 });
