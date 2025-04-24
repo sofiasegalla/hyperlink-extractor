@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "Extract all links (or just those in your selection) from any page to your clipboard with optional LLM promt",
   "permissions": ["activeTab", "scripting", "sidePanel", "tabs", "contextMenus"],
+  "host_permissions": ["<all_urls>"],
   "action": {
     "default_icon": {
       "16": "icons/favicon-16x16.png",
