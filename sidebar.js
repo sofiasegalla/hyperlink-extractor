@@ -49,9 +49,10 @@ async function renderClippedPages() {
         <div class="clip-title">${page.title}</div>
         <a href="${page.url}" class="clip-url" target="_blank">${page.url}</a>
         <div class="clip-date">${formatDate(page.timestamp)}</div>
-        <div class="clip-content">
-          <ul style="padding-left: 16px; margin-top: 0;">
-            ${(page.links || []).map(link => `
+        <div class="clip-content" id="clip-content-${page.id}">
+          ${(page.links.length > 10) ? `<button class="toggle-btn" data-id="${page.id}">Show more</button>` : ''}
+          <ul class="link-list" style="padding-left: 16px; margin-top: 0; list-style-type: disc;">
+            ${(page.links || []).slice(0, 10).map(link => `
               <li><a href="${link.href}" target="_blank">${link.text || link.href}</a></li>
             `).join('')}
           </ul>
@@ -81,6 +82,34 @@ async function renderClippedPages() {
         }
       });
     });
+
+    // Add toggle behavior for "Show more" buttons
+    document.querySelectorAll('.toggle-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const id = button.dataset.id;
+        const contentDiv = document.getElementById(`clip-content-${id}`);
+        const listElement = contentDiv.querySelector('.link-list');
+        const fullPage = pages.find(p => p.id == id);
+        const fullList = fullPage?.links || [];
+    
+        const isCollapsed = button.textContent === 'Show more';
+    
+        if (isCollapsed) {
+          listElement.innerHTML = fullList.map(link => `
+            <li><a href="${link.href}" target="_blank">${link.text || link.href}</a></li>
+          `).join('');
+          button.textContent = 'Show less';
+          contentDiv.insertBefore(button, listElement); // move to top
+        } else {
+          listElement.innerHTML = fullList.slice(0, 10).map(link => `
+            <li><a href="${link.href}" target="_blank">${link.text || link.href}</a></li>
+          `).join('');
+          button.textContent = 'Show more';
+          contentDiv.appendChild(button); // move back to bottom
+        }
+      });
+    });
+
     
   } catch (error) {
     console.error('Error rendering clipped pages:', error);
