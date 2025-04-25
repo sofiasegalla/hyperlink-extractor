@@ -5,25 +5,22 @@
 
 // Elements
 const clipContainer = document.getElementById('clipContainer');
-const clearAllBtn = document.getElementById('clearAllBtn');
+const clearAllBtn   = document.getElementById('clearAllBtn');
 
-// Format date for display
+// Format ISO timestamp → human date/time
 function formatDate(dateString) {
   const date = new Date(dateString);
   return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
 }
 
-// Render all clipped pages from the database
+// Main render function
 async function renderClippedPages() {
   try {
-    // Get all clipped pages from IndexedDB
+    // 1) Fetch everything
     const pages = await WebpageClipperDB.getAllPages();
-    
-    // Clear the container
     clipContainer.innerHTML = '';
-    
-    if (pages.length === 0) {
-      // Show a message if there are no clipped pages
+
+    if (!pages.length) {
       clipContainer.innerHTML = `
         <div class="no-clips">
           <p>No pages clipped yet</p>
@@ -32,58 +29,118 @@ async function renderClippedPages() {
       `;
       return;
     }
-    
-    // Create the list element
-    const listElement = document.createElement('div');
-    listElement.className = 'clip-list';
-    
-    // Sort pages by timestamp, newest first
-    pages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    
-    // Add each page to the list
-    // <div class ="clip-wordcount>${page.wordcount}</div>"
-    pages.forEach(page => {
-      const clipItem = document.createElement('div');
-      clipItem.className = 'clip-item';
-      clipItem.innerHTML = `
-        <div class="clip-title">${page.title}</div>
-        <a href="${page.url}" class="clip-url" target="_blank">${page.url}</a>
-        <div class="clip-date">${formatDate(page.timestamp)}</div>
-        <div class="clip-content" id="clip-content-${page.id}">
-          ${(page.links.length > 10) ? `<button class="toggle-btn" data-id="${page.id}">Show more</button>` : ''}
-          <ul class="link-list" style="padding-left: 16px; margin-top: 0; list-style-type: disc;">
-            ${(page.links || []).slice(0, 10).map(link => `
-              <li><a href="${link.href}" target="_blank">${link.text || link.href}</a></li>
-            `).join('')}
-          </ul>
-        </div>
-        <div class="clip-wordcount">Total links: ${page.linkCount}</div>
-        <button class="delete-btn" data-id="${page.id}">×</button>
-      `;
-      
-      // Add the item to the list
-      listElement.appendChild(clipItem);
+
+    // 2) Group by URL
+    const groups = pages.reduce((acc, page) => {
+      const key = page.url;
+      (acc[key] = acc[key] || []).push(page);
+      return acc;
+    }, {});
+
+    // 3) Build an array of groups sorted by each group’s latest extraction (newest first)
+    const sortedGroups = Object.values(groups)
+    .map(group => {
+      // sort each group newest→oldest
+      group.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      return group;
+    })
+    .sort((g1, g2) => {
+      // compare the first (newest) timestamp in each
+      return new Date(g2[0].timestamp) - new Date(g1[0].timestamp);
     });
-    
-    // Add the list to the container
-    clipContainer.appendChild(listElement);
-    
-    // Add event listeners for delete buttons
-    const deleteButtons = document.querySelectorAll('.delete-btn');
-    deleteButtons.forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const id = parseInt(e.target.dataset.id, 10);
+
+    // 4) Now render in that order
+    sortedGroups.forEach(groupPages => {
+      // sort newest→oldest
+      groupPages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      // group container
+      const groupDiv = document.createElement('div');
+      groupDiv.className = 'page-group';
+
+      // big title (once per URL)
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'group-title';
+      titleDiv.textContent = groupPages[0].title;
+      groupDiv.appendChild(titleDiv);
+
+      // one entry per extraction
+      groupPages.forEach(page => {
+        const entry = document.createElement('div');
+        entry.className = 'extraction-item';
+
+        // delete button
+        const delBtn = document.createElement('button');
+        delBtn.className = 'delete-btn';
+        delBtn.dataset.id = page.id;
+        delBtn.textContent = '×';
+        entry.appendChild(delBtn);
+
+        // timestamp
+        const dateDiv = document.createElement('div');
+        dateDiv.className = 'clip-date';
+        dateDiv.textContent = formatDate(page.timestamp);
+        entry.appendChild(dateDiv);
+
+        // snippet: first 2 + last 2 link texts
+        const texts = (page.links || []).map(l => l.text || l.href);
+        const preview = texts.length <= 4
+          ? texts.join(' • ')
+          : texts.slice(0,2).join(' • ') + ' … ' + texts.slice(-2).join(' • ');
+        const snipDiv = document.createElement('div');
+        snipDiv.className = 'clip-snippet';
+        snipDiv.textContent = preview;
+        entry.appendChild(snipDiv);
+
+        // link list + toggle
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'clip-content';
+        contentDiv.id = `clip-content-${page.id}`;
+
+        if (page.links.length > 10) {
+          const btn = document.createElement('button');
+          btn.className = 'toggle-btn';
+          btn.dataset.id = page.id;
+          btn.textContent = 'Show more';
+          contentDiv.appendChild(btn);
+        }
+
+        const ul = document.createElement('ul');
+        ul.className = 'link-list';
+        ul.style.cssText = 'padding-left:16px; margin-top:0; list-style:disc';
+        (page.links || []).slice(0,10).forEach(link => {
+          const li = document.createElement('li');
+          li.innerHTML = `<a href="${link.href}" target="_blank">${link.text || link.href}</a>`;
+          ul.appendChild(li);
+        });
+        contentDiv.appendChild(ul);
+        entry.appendChild(contentDiv);
+
+        // divider
+        const hr = document.createElement('hr');
+        hr.className = 'extraction-divider';
+        entry.appendChild(hr);
+
+        groupDiv.appendChild(entry);
+      });
+
+      clipContainer.appendChild(groupDiv);
+    });
+
+    // 4) Re-bind delete handlers
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', async e => {
+        const id = parseInt(e.currentTarget.dataset.id, 10);
         try {
           await WebpageClipperDB.deletePage(id);
-          // Re-render the list
           await renderClippedPages();
-        } catch (error) {
-          console.error('Error deleting page:', error);
+        } catch (err) {
+          console.error('Error deleting page:', err);
         }
       });
     });
 
-    // Add toggle behavior for "Show more" buttons
+    // 5) Re-bind toggle handlers (closure over `pages`)
     document.querySelectorAll('.toggle-btn').forEach(button => {
       button.addEventListener('click', () => {
         const id = button.dataset.id;
@@ -91,26 +148,24 @@ async function renderClippedPages() {
         const listElement = contentDiv.querySelector('.link-list');
         const fullPage = pages.find(p => p.id == id);
         const fullList = fullPage?.links || [];
-    
+
         const isCollapsed = button.textContent === 'Show more';
-    
         if (isCollapsed) {
-          listElement.innerHTML = fullList.map(link => `
-            <li><a href="${link.href}" target="_blank">${link.text || link.href}</a></li>
+          listElement.innerHTML = fullList.map(l => `
+            <li><a href="${l.href}" target="_blank">${l.text || l.href}</a></li>
           `).join('');
           button.textContent = 'Show less';
-          contentDiv.insertBefore(button, listElement); // move to top
+          contentDiv.insertBefore(button, listElement);
         } else {
-          listElement.innerHTML = fullList.slice(0, 10).map(link => `
-            <li><a href="${link.href}" target="_blank">${link.text || link.href}</a></li>
+          listElement.innerHTML = fullList.slice(0,10).map(l => `
+            <li><a href="${l.href}" target="_blank">${l.text || l.href}</a></li>
           `).join('');
           button.textContent = 'Show more';
-          contentDiv.appendChild(button); // move back to bottom
+          contentDiv.appendChild(button);
         }
       });
     });
 
-    
   } catch (error) {
     console.error('Error rendering clipped pages:', error);
     clipContainer.innerHTML = `
@@ -122,7 +177,7 @@ async function renderClippedPages() {
   }
 }
 
-// Initialize the database and render the pages
+// Initialize DB + render on load
 async function initialize() {
   try {
     await WebpageClipperDB.init();
@@ -138,7 +193,7 @@ async function initialize() {
   }
 }
 
-// Clear all clipped pages
+// Clear all pages
 clearAllBtn.addEventListener('click', async () => {
   if (confirm('Are you sure you want to delete all clipped pages?')) {
     try {
@@ -150,10 +205,9 @@ clearAllBtn.addEventListener('click', async () => {
   }
 });
 
-// Listen for messages from the background script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+// Listen for new clips from the background
+chrome.runtime.onMessage.addListener((message, sender) => {
   if (message.action === 'newClip' && message.data) {
-    // Add the new clip to the database and refresh the UI
     (async () => {
       try {
         await WebpageClipperDB.addPage(message.data);
@@ -163,9 +217,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     })();
   }
-  // Don't return true here as we're not sending an asynchronous response
-  // Returning true was causing duplicate clips due to message port staying open
 });
 
-// Initialize when the document is loaded
+// Kick things off
 document.addEventListener('DOMContentLoaded', initialize);
