@@ -2,10 +2,28 @@
  * Extract all <a> elements from a given root (Document or DocumentFragment)
  */
 function extractHyperLinks(root) {
-  const anchors = Array.from(root.querySelectorAll('a')).filter(a => a.href);
-  return anchors.map(a => ({ href: a.href, text: a.innerText.trim() }));
-}
+  const anchors = Array.from(root.querySelectorAll('a')).filter(a => {
+    // Filter out links without href or with fragment-only hrefs
+    if (!a.href || a.href === '#' || a.href.endsWith('/#')) return false;
+    
+    try {
+      const url = new URL(a.href);
+      // Check if it's just a fragment link to the same page
+      if (url.hash && url.pathname === window.location.pathname && 
+          url.origin === window.location.origin) {
+        return false;
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  });
 
+  return anchors.map(a => ({
+    href: a.href,
+    text: (a.innerText || a.textContent || '').trim(),
+  }));
+}
 /**
  * Build the standard pageData object from a list of links
  */
@@ -67,3 +85,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return;
   }
 });
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    extractHyperLinks,
+    buildPageData,
+    sendLinkData,
+    handleExtractAll,
+    handleExtractSelection
+  };
+}

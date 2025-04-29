@@ -1,0 +1,30 @@
+{
+  "name": "hyperlink-extractor",
+  "version": "1.0.0",
+  "description": "A Chrome extension that allows you to quickly copy all hyperlinks contained in a page or a selected section of a page with a right-click button option. It saves the hyperlinks to your clipboard, optionally with a preloaded prompt. There is a sidebar that showcases your history of copied content and allows you to tweak some settings.",
+  "main": "background.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sofiasegalla/hyperlink-extractor.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sofiasegalla/hyperlink-extractor/issues"
+  },
+  "homepage": "https://github.com/sofiasegalla/hyperlink-extractor#readme",
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  }
+}
