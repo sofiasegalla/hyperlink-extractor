@@ -177,10 +177,25 @@ async function renderClippedPages() {
   }
 }
 
+async function drainPendingClips() {
+  const { pendingClips = [] } = await chrome.storage.local.get({ pendingClips: [] });
+  if (!pendingClips.length) return;
+  for (const clip of pendingClips) {
+    try {
+      await WebpageClipperDB.addPage(clip);
+    } catch (err) {
+      console.error('Failed to add pending clip:', err);
+    }
+  }
+  // clear the queue
+  await chrome.storage.local.set({ pendingClips: [] });
+}
+
 // Initialize DB + render on load
 async function initialize() {
   try {
     await WebpageClipperDB.init();
+    await drainPendingClips();
     await renderClippedPages();
   } catch (error) {
     console.error('Error initializing database:', error);

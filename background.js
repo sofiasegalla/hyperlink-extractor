@@ -6,11 +6,20 @@
 // Register the side panel
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
-// Relay extractor results into the sidebar
+// helper to append a clip to storage
+async function queueClip(data) {
+  const { pendingClips = [] } = await chrome.storage.local.get({ pendingClips: [] });
+  pendingClips.push(data);
+  await chrome.storage.local.set({ pendingClips });
+}
+
+// Relay extractor results into the sidebar *and* store them
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const { action, data } = message;
   if (action === 'extractAllLinks' || action === 'extractLinksFromSelection') {
-    console.log(`[Background] forwarding "${action}" to sidebar`, data);
+    // 1) queue it
+    queueClip(data).catch(console.error);
+    // 2) forward it (sidebar or content)
     chrome.runtime.sendMessage({ action: 'newClip', data });
     sendResponse({ success: true });
   }
