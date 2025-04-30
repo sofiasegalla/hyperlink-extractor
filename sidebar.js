@@ -196,6 +196,15 @@ async function initialize() {
   try {
     await WebpageClipperDB.init();
     await drainPendingClips();
+    
+    //for settings related to copy type
+    const sel = document.getElementById('copyModeSelect');
+    const { copyMode = 'urls' } = await chrome.storage.local.get({ copyMode: 'urls' });
+    sel.value = copyMode;
+    sel.addEventListener('change', () => {
+      chrome.storage.local.set({ copyMode: sel.value });
+    });
+    
     await renderClippedPages();
   } catch (error) {
     console.error('Error initializing database:', error);

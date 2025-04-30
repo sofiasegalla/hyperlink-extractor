@@ -147,9 +147,37 @@
       border-top: 1px dashed #ccc;
       margin: 0.8em 0;
     }
+
+    .settings-panel {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      margin-bottom: 1em;
+      padding: 0.5em;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .settings-panel select {
+      padding: 4px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
   </style>
 </head>
 <body>
+  <!-- Settings panel -->
+  <div id="settings" class="settings-panel">
+    <label for="copyModeSelect"><strong>Copy mode:</strong></label>
+    <select id="copyModeSelect">
+      <option value="urls">URLs only</option>
+      <option value="labels">[Text] URL</option>
+      <option value="full">Full text + links</option>
+    </select>
+  </div>
+
   <div class="header">
     <h1>Extracted Hyperlinks</h1>
     <button id="clearAllBtn" class="clear-btn">Clear All</button>
