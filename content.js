@@ -48,23 +48,48 @@ function sendLinkData(action, data) {
 }
 
 /**
- * Extract from the entire document
+ * Extract from the entire document, copy to clipboard, then send.
  */
-function handleExtractAll() {
+async function handleExtractAll() {
   const links = extractHyperLinks(document);
+
+  // 1) Copy hrefs (one per line) into the clipboard
+  const text = links.map(l => l.href).join('\n');
+  try {
+    await navigator.clipboard.writeText(text);
+    console.log('✅ Links copied to clipboard');
+  } catch (e) {
+    console.warn('❌ Clipboard write failed:', e);
+  }
+
+  // 2) Now send into background/db
   sendLinkData('extractAllLinks', buildPageData(links));
 }
 
+
 /**
- * Extract only from the user’s selection
+ * Extract only from the user’s selection, copy to clipboard, then send.
  */
-function handleExtractSelection() {
+async function handleExtractSelection() {
   const sel = window.getSelection();
   if (!sel.rangeCount) return;
   const frag = sel.getRangeAt(0).cloneContents();
   const links = extractHyperLinks(frag);
+
+  // Copy hrefs
+  const text = links.map(l => l.href).join('\n');
+  try {
+    await navigator.clipboard.writeText(text);
+    console.log('✅ Links copied to clipboard');
+  } catch (e) {
+    console.warn('❌ Clipboard write failed:', e);
+  }
+
+  // Send into background/db
   sendLinkData('extractLinksFromSelection', buildPageData(links));
 }
+
+
 
 // --- message listener ---
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
