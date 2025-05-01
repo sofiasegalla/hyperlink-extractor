@@ -148,6 +148,7 @@
       margin: 0.8em 0;
     }
 
+<<<<<<< Updated upstream
     .settings-panel {
       display: flex;
       align-items: center;
@@ -165,6 +166,57 @@
       border-radius: 4px;
       font-size: 0.9em;
     }
+=======
+    .group-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1em;
+      padding: 0.2em 0;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .group-title-wrapper {
+      flex-grow: 1;
+      cursor: pointer;
+    }
+
+    .group-title-wrapper span {
+      font-size: 1em;
+      font-weight: bold;
+      user-select: none;
+      transition: color 0.2s ease;
+    }
+
+    .group-title-wrapper span.collapsed {
+      color: #777;
+    }
+
+    .group-delete-btn {
+      background: none;
+      border: none;
+      font-size: 1.3em; /* Slightly bigger than .delete-btn */
+      color: #999;
+      cursor: pointer;
+      padding: 0 8px;
+      margin-left: 10px;
+      line-height: 1;
+    }
+
+    .group-delete-btn:hover {
+      color: #c00;
+    }
+
+    .delete-btn {
+      font-size: 1em;
+      color: #bbb;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    
+>>>>>>> Stashed changes
   </style>
 </head>
 <body>
