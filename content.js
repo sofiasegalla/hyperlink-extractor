@@ -90,6 +90,54 @@ async function handleExtractSelection() {
   try {
     await navigator.clipboard.writeText(text);
     console.log('✅ Links copied to clipboard');
+    showCopyNotificationOnPage();
+
+// --- Notification on main page ---
+function showCopyNotificationOnPage() {
+  // Check if notification div exists; if not, create it
+  let notif = document.getElementById('copyNotificationMainPage');
+  if (!notif) {
+    notif = document.createElement('div');
+    notif.id = 'copyNotificationMainPage';
+    notif.textContent = 'Links copied to clipboard';
+    notif.style.position = 'fixed';
+    notif.style.top = '32px';
+    notif.style.left = '50%';
+    notif.style.transform = 'translateX(-50%)';
+    notif.style.background = '#323232';
+    notif.style.color = '#fff';
+    notif.style.padding = '12px 28px';
+    notif.style.borderRadius = '8px';
+    notif.style.boxShadow = '0 2px 10px rgba(0,0,0,0.18)';
+    notif.style.fontSize = '1em';
+    notif.style.opacity = '0';
+    notif.style.pointerEvents = 'none';
+    notif.style.zIndex = '2147483647';
+    notif.style.transition = 'opacity 0.4s';
+    notif.style.display = 'block';
+    notif.style.maxWidth = '90vw';
+    notif.style.textAlign = 'center';
+    notif.style.fontFamily = 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif';
+    document.body.appendChild(notif);
+    // Add fadeOut keyframes as a <style> tag if not present
+    if (!document.getElementById('copyNotifAnimStyle')) {
+      const style = document.createElement('style');
+      style.id = 'copyNotifAnimStyle';
+      style.textContent = `@keyframes fadeOutCopyNotif { 0%{opacity:0;} 10%{opacity:1;} 85%{opacity:1;} 100%{opacity:0;} }`;
+      document.head.appendChild(style);
+    }
+  }
+  notif.style.opacity = '1';
+  notif.style.display = 'block';
+  notif.style.animation = 'fadeOutCopyNotif 2.2s forwards';
+  // Remove/hide after animation
+  setTimeout(() => {
+    notif.style.opacity = '0';
+    notif.style.display = 'none';
+    notif.style.animation = '';
+  }, 2200);
+}
+
   } catch (e) {
     console.warn('❌ Clipboard write failed:', e);
   }
