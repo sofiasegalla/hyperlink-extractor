@@ -6,7 +6,7 @@
 // Register the side panel
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
-// helper to append a clip to storage
+// Helper to append a clip to storage
 async function queueClip(data) {
   const { pendingClips = [] } = await chrome.storage.local.get({ pendingClips: [] });
   pendingClips.push(data);
@@ -16,22 +16,15 @@ async function queueClip(data) {
 // Relay extractor results into the sidebar *and* store them
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const { action, data } = message;
-  if (action === 'extractAllLinks' || action === 'extractLinksFromSelection') {
-    // 1) queue it
+  if (action === 'extractLinksFromSelection') {
     queueClip(data).catch(console.error);
-    // 2) forward it (sidebar or content)
     chrome.runtime.sendMessage({ action: 'newClip', data });
     sendResponse({ success: true });
   }
 });
 
-// Create two context-menu items on install
+// Create context-menu item on install
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
-    id: 'extractAllLinks',
-    title: 'Extract all links',
-    contexts: ['page', 'selection']
-  });
   chrome.contextMenus.create({
     id: 'extractLinksFromSelection',
     title: 'Extract links from selection',
@@ -47,22 +40,15 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     return;
   }
 
-  let extractorAction = null;
-  if (info.menuItemId === 'extractAllLinks') {
-    extractorAction = 'extractAllLinks';
-  } else if (info.menuItemId === 'extractLinksFromSelection') {
-    extractorAction = 'extractLinksFromSelection';
-  } else {
+  if (info.menuItemId !== 'extractLinksFromSelection') {
     console.log('[Background] clicked menuItemId not recognized—ignoring');
     return;
   }
 
-  // Build the message
+  const extractorAction = 'extractLinksFromSelection';
+
   const buildMessage = () => {
-    const msg = { action: extractorAction };
-    if (extractorAction === 'extractLinksFromSelection') {
-      msg.selectionText = info.selectionText;
-    }
+    const msg = { action: extractorAction, selectionText: info.selectionText };
     console.log('[Background] sending to content script:', msg);
     chrome.tabs.sendMessage(tab.id, msg);
   };

@@ -258,6 +258,7 @@ chrome.runtime.onMessage.addListener((message, sender) => {
       try {
         await WebpageClipperDB.addPage(message.data);
         await renderClippedPages();
+        await chrome.storage.local.set({ pendingClips: [] });
       } catch (error) {
         console.error('Error adding new clip:', error);
       }
