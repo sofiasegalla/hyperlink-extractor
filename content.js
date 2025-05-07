@@ -76,8 +76,36 @@ async function handleExtractSelection() {
   const frag = sel.getRangeAt(0).cloneContents();
   const links = extractHyperLinks(frag);
 
-  // Copy hrefs
-  const text = links.map(l => l.href).join('\n');
+  // Read copy mode from chrome.storage.local
+  let copyMode = 'urls';
+  try {
+    const storage = await new Promise(resolve => {
+      chrome.storage && chrome.storage.local
+        ? chrome.storage.local.get({ copyMode: 'urls' }, resolve)
+        : resolve({ copyMode: 'urls' });
+    });
+    copyMode = storage.copyMode || 'urls';
+  } catch (e) {
+    // fallback to default
+    copyMode = 'urls';
+  }
+
+  // console.log('[DEBUG] Copy mode:', copyMode);
+  // console.log('[DEBUG] Links:', links);
+
+  // Format clipboard text based on copyMode
+  let text = '';
+  if (copyMode === 'urls') {
+    text = links.map(l => l.href).join('\n');
+  } else if (copyMode === 'labels') {
+    text = links.map(l => `[${l.text || ''}] ${l.href}`).join('\n');
+  } else {
+    // fallback to URLs only
+    text = links.map(l => l.href).join('\n');
+  }
+
+  // console.log('[DEBUG] Clipboard text:', text);
+
   try {
     await navigator.clipboard.writeText(text);
     console.log('✅ Links copied to clipboard');
