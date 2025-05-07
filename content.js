@@ -47,25 +47,6 @@ function sendLinkData(action, data) {
   });
 }
 
-/**
- * Extract from the entire document, copy to clipboard, then send.
- */
-async function handleExtractAll() {
-  const links = extractHyperLinks(document);
-
-  // 1) Copy hrefs (one per line) into the clipboard
-  const text = links.map(l => l.href).join('\n');
-  try {
-    await navigator.clipboard.writeText(text);
-    console.log('✅ Links copied to clipboard');
-  } catch (e) {
-    console.warn('❌ Clipboard write failed:', e);
-  }
-
-  // 2) Now send into background/db
-  sendLinkData('extractAllLinks', buildPageData(links));
-}
-
 
 /**
  * Extract only from the user’s selection, copy to clipboard, then send.
@@ -126,12 +107,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return;
   }
 
-  if (message.action === 'extractAllLinks') {
-    handleExtractAll();
-    sendResponse({ success: true });
-    return;
-  }
-
   if (message.action === 'extractLinksFromSelection') {
     handleExtractSelection();
     sendResponse({ success: true });
@@ -144,7 +119,6 @@ if (typeof module !== 'undefined' && module.exports) {
     extractHyperLinks,
     buildPageData,
     sendLinkData,
-    handleExtractAll,
     handleExtractSelection
   };
 }
