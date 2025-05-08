@@ -7,6 +7,30 @@
   <link rel="stylesheet" href="sidebar.css">
 </head>
 <body>
+  <!-- Settings panel -->
+  <div id="settings" class="settings-panel">
+    <label for="copyModeSelect"><strong>Copy mode:</strong></label>
+    <select id="copyModeSelect">
+      <option value="urls">URLs only</option>
+      <option value="labels">[Text] URL</option>
+      <option value="full">Full text + links</option>
+    </select>
+  </div>
+
+  <div id="promptSelectorContainer" class="settings-panel">
+    <label for="promptSelector"><strong>Select a Prompt:</strong></label>
+    <select id="promptSelector">
+      <option value="">None</option>
+      <option value="summarize">Summarize these links.</option>
+      <option value="analyze">Analyze the credibility of these sources.</option>
+      <option value="compare">Compare the perspectives in these articles.</option>
+      <option value="custom">Write your own</option>
+    </select>
+  
+    <!-- This will replace the select when "Write your own" is chosen -->
+    <textarea id="customPrompt" placeholder="Enter your custom prompt..." style="display:none; width: 100%; margin-top: 8px;"></textarea>
+  </div>
+
   <!-- Notification for copy -->
   <div id="copyNotification" class="copy-notification" style="display:none;">Links copied to clipboard</div>
 

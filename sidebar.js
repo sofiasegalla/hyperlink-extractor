@@ -247,7 +247,49 @@ async function initialize() {
     sel.addEventListener('change', () => {
       chrome.storage.local.set({ copyMode: sel.value });
     });
-    
+
+    // for prompt selector functionality
+      const promptSelector = document.getElementById('promptSelector');
+      const customPrompt = document.getElementById('customPrompt');
+
+      // Load saved prompt from storage on startup
+      const { savedPrompt = '' } = await chrome.storage.local.get({ savedPrompt: '' });
+
+      if (savedPrompt) {
+        if (savedPrompt !== 'summarize' && savedPrompt !== 'analyze' && savedPrompt !== 'compare') {
+          // Treat as custom prompt
+          promptSelector.value = 'custom';
+          promptSelector.style.display = 'none';
+          customPrompt.style.display = 'block';
+          customPrompt.value = savedPrompt;
+        } else {
+          // Predefined prompt
+          promptSelector.value = savedPrompt;
+          customPrompt.style.display = 'none';
+          promptSelector.style.display = 'inline-block';
+        }
+      }
+
+      // Handle dropdown → custom input
+      promptSelector.addEventListener('change', () => {
+        if (promptSelector.value === 'custom') {
+          promptSelector.style.display = 'none';
+          customPrompt.style.display = 'block';
+          customPrompt.focus();
+        }
+        chrome.storage.local.set({ savedPrompt: getSelectedPrompt() });
+      });
+
+      // Handle custom input → revert back to dropdown if blank
+      customPrompt.addEventListener('blur', () => {
+        if (customPrompt.value.trim() === '') {
+          customPrompt.style.display = 'none';
+          promptSelector.style.display = 'inline-block';
+          promptSelector.value = '';
+        }
+        chrome.storage.local.set({ savedPrompt: getSelectedPrompt() });
+      });
+        
     await renderClippedPages();
   } catch (error) {
     console.error('Error initializing database:', error);
@@ -258,6 +300,13 @@ async function initialize() {
       </div>
     `;
   }
+}
+
+function getSelectedPrompt() {
+  if (promptSelector.value === 'custom') {
+    return customPrompt.value.trim();
+  }
+  return promptSelector.value;
 }
 
 // Clear all pages
@@ -286,6 +335,7 @@ chrome.runtime.onMessage.addListener((message, sender) => {
     })();
   }
 });
+
 
 // Kick things off
 document.addEventListener('DOMContentLoaded', initialize);

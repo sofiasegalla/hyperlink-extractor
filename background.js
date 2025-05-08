@@ -48,9 +48,17 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   const extractorAction = 'extractLinksFromSelection';
 
   const buildMessage = () => {
-    const msg = { action: extractorAction, selectionText: info.selectionText };
-    console.log('[Background] sending to content script:', msg);
-    chrome.tabs.sendMessage(tab.id, msg);
+    chrome.storage.local.get(['savedPrompt'], result => {
+      const savedPrompt = result.savedPrompt || '';
+      const msg = {
+        action: extractorAction,
+        prompt: savedPrompt,
+        selectionText: info.selectionText // keep for debugging or advanced features
+      };
+
+      console.log('[Background] sending to content script with:', msg);
+      chrome.tabs.sendMessage(tab.id, msg);
+    });
   };
 
   // Ping to see if content.js is loaded

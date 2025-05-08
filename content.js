@@ -51,23 +51,45 @@ function sendLinkData(action, data) {
   });
 }
 
+/**
+ * Extract from the entire document, copy to clipboard, then send.
+ */
+async function handleExtractAll() {
+  const links = extractHyperLinks(document);
+
+  // 1) Copy hrefs (one per line) into the clipboard
+  const linkText = links.map(l => l.href).join('\n');
+  const finalText = prompt ? `${prompt}\n\n${linkText}` : linkText;
+  await navigator.clipboard.writeText(finalText);
+
+  try {
+    await navigator.clipboard.writeText(finalText);
+    console.log('✅ Links copied to clipboard');
+  } catch (e) {
+    console.warn('❌ Clipboard write failed:', e);
+  }
+
+  // 2) Now send into background/db
+  sendLinkData('extractAllLinks', buildPageData(links));
+}
+
 
 /**
  * Extract only from the user’s selection, copy to clipboard, then send.
  */
-async function handleExtractSelection() {
+async function handleExtractSelection(userPrompt = '') {
   const sel = window.getSelection();
   if (!sel.rangeCount) return;
+
   const range = sel.getRangeAt(0);
   const frag = range.cloneContents();
   const links = extractHyperLinks(frag);
 
-  // Get the raw HTML of the selection
   const container = document.createElement('div');
   container.appendChild(range.cloneContents());
   const rawHtml = container.innerHTML;
 
-  // Read copy mode from chrome.storage.local
+  // Read copy mode
   let copyMode = 'urls';
   try {
     const storage = await new Promise(resolve => {
@@ -77,24 +99,16 @@ async function handleExtractSelection() {
     });
     copyMode = storage.copyMode || 'urls';
   } catch (e) {
-    // fallback to default
     copyMode = 'urls';
   }
 
-  // console.log('[DEBUG] Copy mode:', copyMode);
-  // console.log('[DEBUG] Links:', links);
-
-  // Format clipboard text based on copyMode
+  // Build clipboard text
   let text = '';
   if (copyMode === 'urls') {
     text = links.map(l => l.href).join('\n');
   } else if (copyMode === 'labels') {
     text = links.map(l => `[${l.text || ''}] ${l.href}`).join('\n');
   } else if (copyMode === 'full') {
-    // Output full text, but turn <a>text</a> into [text](href)
-    const container = document.createElement('div');
-    container.innerHTML = rawHtml;
-    // Replace all <a> with [text](href) if text exists and href is valid
     function serializeWithLinks(node) {
       let out = '';
       node.childNodes.forEach(child => {
@@ -115,73 +129,65 @@ async function handleExtractSelection() {
       return out;
     }
     text = serializeWithLinks(container).replace(/\s+/g, ' ').trim();
-  } else {
-    // fallback to URLs only
-    text = links.map(l => l.href).join('\n');
   }
 
-  // console.log('[DEBUG] Clipboard text:', text);
+  // Combine with prompt
+  const finalText = userPrompt ? `${userPrompt}\n\n${text}` : text;
 
   try {
-    await navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText(finalText);
     console.log('✅ Links copied to clipboard');
     showCopyNotificationOnPage();
-
-// --- Notification on main page ---
-function showCopyNotificationOnPage() {
-  // Check if notification div exists; if not, create it
-  let notif = document.getElementById('copyNotificationMainPage');
-  if (!notif) {
-    notif = document.createElement('div');
-    notif.id = 'copyNotificationMainPage';
-    notif.textContent = 'Links copied to clipboard';
-    notif.style.position = 'fixed';
-    notif.style.top = '32px';
-    notif.style.left = '50%';
-    notif.style.transform = 'translateX(-50%)';
-    notif.style.background = '#323232';
-    notif.style.color = '#fff';
-    notif.style.padding = '12px 28px';
-    notif.style.borderRadius = '8px';
-    notif.style.boxShadow = '0 2px 10px rgba(0,0,0,0.18)';
-    notif.style.fontSize = '1em';
-    notif.style.opacity = '0';
-    notif.style.pointerEvents = 'none';
-    notif.style.zIndex = '2147483647';
-    notif.style.transition = 'opacity 0.4s';
-    notif.style.display = 'block';
-    notif.style.maxWidth = '90vw';
-    notif.style.textAlign = 'center';
-    notif.style.fontFamily = 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif';
-    document.body.appendChild(notif);
-    // Add fadeOut keyframes as a <style> tag if not present
-    if (!document.getElementById('copyNotifAnimStyle')) {
-      const style = document.createElement('style');
-      style.id = 'copyNotifAnimStyle';
-      style.textContent = `@keyframes fadeOutCopyNotif { 0%{opacity:0;} 10%{opacity:1;} 85%{opacity:1;} 100%{opacity:0;} }`;
-      document.head.appendChild(style);
-    }
-  }
-  notif.style.opacity = '1';
-  notif.style.display = 'block';
-  notif.style.animation = 'fadeOutCopyNotif 2.2s forwards';
-  // Remove/hide after animation
-  setTimeout(() => {
-    notif.style.opacity = '0';
-    notif.style.display = 'none';
-    notif.style.animation = '';
-  }, 2200);
-}
-
   } catch (e) {
     console.warn('❌ Clipboard write failed:', e);
   }
 
-  // Send into background/db
+  // Send data (with rawHtml if you want full text)
   sendLinkData('extractLinksFromSelection', buildPageData(links, rawHtml));
 }
 
-
+function showCopyNotificationOnPage() {
+  let notif = document.getElementById('copyNotificationMainPage');
+  if (!notif) {
+      notif = document.createElement('div');
+      notif.id = 'copyNotificationMainPage';
+      notif.textContent = 'Links copied to clipboard';
+      notif.style.position = 'fixed';
+      notif.style.top = '32px';
+      notif.style.left = '50%';
+      notif.style.transform = 'translateX(-50%)';
+      notif.style.background = '#323232';
+      notif.style.color = '#fff';
+      notif.style.padding = '12px 28px';
+      notif.style.borderRadius = '8px';
+      notif.style.boxShadow = '0 2px 10px rgba(0,0,0,0.18)';
+      notif.style.fontSize = '1em';
+      notif.style.opacity = '0';
+      notif.style.pointerEvents = 'none';
+      notif.style.zIndex = '2147483647';
+      notif.style.transition = 'opacity 0.4s';
+      notif.style.display = 'block';
+      notif.style.maxWidth = '90vw';
+      notif.style.textAlign = 'center';
+      notif.style.fontFamily = 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif';
+      document.body.appendChild(notif);
+      // Add fadeOut keyframes as a <style> tag if not present
+      if (!document.getElementById('copyNotifAnimStyle')) {
+          const style = document.createElement('style');
+          style.id = 'copyNotifAnimStyle';
+          style.textContent = `@keyframes fadeOutCopyNotif { 0%{opacity:0;} 10%{opacity:1;} 85%{opacity:1;} 100%{opacity:0;} }`;
+          document.head.appendChild(style);
+      }
+  }
+  notif.style.opacity = '1';
+  notif.style.display = 'block';
+  notif.style.animation = 'fadeOutCopyNotif 2.2s forwards';
+  setTimeout(() => {
+      notif.style.opacity = '0';
+      notif.style.display = 'none';
+      notif.style.animation = '';
+  }, 2200);
+}
 
 // --- message listener ---
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -191,7 +197,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.action === 'extractLinksFromSelection') {
-    handleExtractSelection();
+    handleExtractSelection(message.prompt || '');    
     sendResponse({ success: true });
     return;
   }
