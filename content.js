@@ -47,15 +47,40 @@ function sendLinkData(action, data) {
   });
 }
 
+/**
+ * Extract from the entire document, copy to clipboard, then send.
+ */
+async function handleExtractAll() {
+  const links = extractHyperLinks(document);
+
+  // 1) Copy hrefs (one per line) into the clipboard
+  const linkText = links.map(l => l.href).join('\n');
+  const finalText = prompt ? `${prompt}\n\n${linkText}` : linkText;
+  await navigator.clipboard.writeText(finalText);
+
+  try {
+    await navigator.clipboard.writeText(finalText);
+    console.log('✅ Links copied to clipboard');
+  } catch (e) {
+    console.warn('❌ Clipboard write failed:', e);
+  }
+
+  // 2) Now send into background/db
+  sendLinkData('extractAllLinks', buildPageData(links));
+}
+
 
 /**
  * Extract only from the user’s selection, copy to clipboard, then send.
  */
-async function handleExtractSelection() {
+async function handleExtractSelection(userPrompt = '') {
   const sel = window.getSelection();
   if (!sel.rangeCount) return;
   const frag = sel.getRangeAt(0).cloneContents();
   const links = extractHyperLinks(frag);
+
+  const linkText = links.map(l => l.href).join('\n');
+  const finalText = userPrompt ? `${userPrompt}\n\n${linkText}` : linkText;
 
   // Read copy mode from chrome.storage.local
   let copyMode = 'urls';
@@ -88,7 +113,7 @@ async function handleExtractSelection() {
   // console.log('[DEBUG] Clipboard text:', text);
 
   try {
-    await navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText(finalText);
     console.log('✅ Links copied to clipboard');
     showCopyNotificationOnPage();
 
@@ -142,10 +167,8 @@ function showCopyNotificationOnPage() {
     console.warn('❌ Clipboard write failed:', e);
   }
 
-  // Send into background/db
   sendLinkData('extractLinksFromSelection', buildPageData(links));
 }
-
 
 
 // --- message listener ---
@@ -156,7 +179,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.action === 'extractLinksFromSelection') {
-    handleExtractSelection();
+    handleExtractSelection(message.prompt || '');    
     sendResponse({ success: true });
     return;
   }
