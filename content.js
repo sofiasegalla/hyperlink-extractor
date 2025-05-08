@@ -27,14 +27,18 @@ function extractHyperLinks(root) {
 /**
  * Build the standard pageData object from a list of links
  */
-function buildPageData(links) {
-  return {
+function buildPageData(links, html) {
+  const data = {
     title: document.title,
     url: window.location.href,
     timestamp: new Date().toISOString(),
     links,
     linkCount: links.length
   };
+  if (html !== undefined) {
+    data.html = html;
+  }
+  return data;
 }
 
 /**
@@ -54,8 +58,14 @@ function sendLinkData(action, data) {
 async function handleExtractSelection() {
   const sel = window.getSelection();
   if (!sel.rangeCount) return;
-  const frag = sel.getRangeAt(0).cloneContents();
+  const range = sel.getRangeAt(0);
+  const frag = range.cloneContents();
   const links = extractHyperLinks(frag);
+
+  // Get the raw HTML of the selection
+  const container = document.createElement('div');
+  container.appendChild(range.cloneContents());
+  const rawHtml = container.innerHTML;
 
   // Read copy mode from chrome.storage.local
   let copyMode = 'urls';
@@ -80,6 +90,31 @@ async function handleExtractSelection() {
     text = links.map(l => l.href).join('\n');
   } else if (copyMode === 'labels') {
     text = links.map(l => `[${l.text || ''}] ${l.href}`).join('\n');
+  } else if (copyMode === 'full') {
+    // Output full text, but turn <a>text</a> into [text](href)
+    const container = document.createElement('div');
+    container.innerHTML = rawHtml;
+    // Replace all <a> with [text](href) if text exists and href is valid
+    function serializeWithLinks(node) {
+      let out = '';
+      node.childNodes.forEach(child => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          out += child.textContent;
+        } else if (child.nodeType === Node.ELEMENT_NODE && child.tagName.toLowerCase() === 'a') {
+          const text = child.textContent.trim();
+          const href = child.getAttribute('href');
+          if (text && href) {
+            out += `[${text}](${href})`;
+          } else {
+            out += text;
+          }
+        } else if (child.nodeType === Node.ELEMENT_NODE) {
+          out += serializeWithLinks(child);
+        }
+      });
+      return out;
+    }
+    text = serializeWithLinks(container).replace(/\s+/g, ' ').trim();
   } else {
     // fallback to URLs only
     text = links.map(l => l.href).join('\n');
@@ -143,7 +178,7 @@ function showCopyNotificationOnPage() {
   }
 
   // Send into background/db
-  sendLinkData('extractLinksFromSelection', buildPageData(links));
+  sendLinkData('extractLinksFromSelection', buildPageData(links, rawHtml));
 }
 
 

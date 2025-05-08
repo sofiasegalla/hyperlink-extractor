@@ -98,10 +98,29 @@ async function renderClippedPages() {
         dateDiv.textContent = formatDate(page.timestamp);
         entry.appendChild(dateDiv);
 
-        const texts = (page.links || []).map(l => l.text || l.href);
-        const preview = texts.length <= 4
-          ? texts.join(' • ')
-          : texts.slice(0, 2).join(' • ') + ' … ' + texts.slice(-2).join(' • ');
+        // Generate preview from html field: first 3 and last 3 words of visible text (excluding links)
+        let preview = '';
+        if (page.html) {
+          // Parse HTML, remove all <a> tags and their contents, extract visible text
+          const container = document.createElement('div');
+          container.innerHTML = page.html;
+          // Remove all <a> tags but keep their text content
+          container.querySelectorAll('a').forEach(a => {
+            // Replace the <a> with its text content
+            const textNode = document.createTextNode(a.textContent || '');
+            a.parentNode.replaceChild(textNode, a);
+          });
+          // Get the visible text
+          const text = container.textContent.trim().replace(/\s+/g, ' ');
+          const words = text.split(' ').filter(Boolean);
+          if (words.length <= 6) {
+            preview = words.join(' ');
+          } else {
+            preview = words.slice(0, 3).join(' ') + ' ... ' + words.slice(-3).join(' ');
+          }
+        } else {
+          preview = '';
+        }
         const snipDiv = document.createElement('div');
         snipDiv.className = 'clip-snippet';
         snipDiv.textContent = preview;
