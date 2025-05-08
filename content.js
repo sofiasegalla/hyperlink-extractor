@@ -24,6 +24,7 @@ function extractHyperLinks(root) {
     text: (a.innerText || a.textContent || '').trim(),
   }));
 }
+
 /**
  * Build the standard pageData object from a list of links
  */
@@ -33,7 +34,8 @@ function buildPageData(links) {
     url: window.location.href,
     timestamp: new Date().toISOString(),
     links,
-    linkCount: links.length
+    linkCount: links.length,
+    selected: true // Default to selected for new extractions
   };
 }
 
@@ -66,9 +68,8 @@ async function handleExtractAll() {
   sendLinkData('extractAllLinks', buildPageData(links));
 }
 
-
 /**
- * Extract only from the user’s selection, copy to clipboard, then send.
+ * Extract only from the user's selection, copy to clipboard, then send.
  */
 async function handleExtractSelection() {
   const sel = window.getSelection();
@@ -88,8 +89,6 @@ async function handleExtractSelection() {
   // Send into background/db
   sendLinkData('extractLinksFromSelection', buildPageData(links));
 }
-
-
 
 // --- message listener ---
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

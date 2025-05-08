@@ -147,15 +147,25 @@
       border-top: 1px dashed #ccc;
       margin: 0.8em 0;
     }
+    
     .settings-panel {
       display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 0.5em;
       margin-bottom: 1em;
       padding: 0.5em;
       background: #fff;
       border-radius: 6px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .copy-mode-container {
+      display: flex;
+      align-items: center;
+    }
+    
+    .copy-mode-container label {
+      margin-right: 10px;
     }
     
     .settings-panel select {
@@ -177,6 +187,8 @@
     .group-title-wrapper {
       flex-grow: 1;
       cursor: pointer;
+      display: flex;
+      align-items: center;
     }
 
     .group-title-wrapper span {
@@ -212,22 +224,71 @@
       border: none;
       cursor: pointer;
     }
+
+    /* New styles for the copy button and checkboxes */
+    .copy-selected-btn {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      padding: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .copy-selected-btn:hover {
+      background-color: #45a049;
+    }
+
+    .page-checkbox {
+      margin-right: 8px;
+      cursor: pointer;
+    }
+    
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    
+    .select-all-btn {
+      font-size: 12px;
+      background-color: #e7e7e7;
+      color: #333;
+      border: none;
+      border-radius: 3px;
+      padding: 3px 8px;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    
+    .select-all-btn:hover {
+      background-color: #d7d7d7;
+    }
   </style>
 </head>
 <body>
   <!-- Settings panel -->
   <div id="settings" class="settings-panel">
-    <label for="copyModeSelect"><strong>Copy mode:</strong></label>
-    <select id="copyModeSelect">
-      <option value="urls">URLs only</option>
-      <option value="labels">[Text] URL</option>
-      <option value="full">Full text + links</option>
-    </select>
+    <div class="copy-mode-container">
+      <label for="copyModeSelect"><strong>Copy mode:</strong></label>
+      <select id="copyModeSelect">
+        <option value="urls">URLs only</option>
+        <option value="labels">[Text] URL</option>
+        <option value="full">Full text + links</option>
+      </select>
+    </div>
+    <button id="copySelectedBtn" class="copy-selected-btn">Copy Selected Links</button>
   </div>
 
-  <div class="header">
+  <div class="title-row">
     <h1>Extracted Hyperlinks</h1>
-    <button id="clearAllBtn" class="clear-btn">Clear All</button>
+    <div>
+      <button id="selectAllBtn" class="select-all-btn">Select All</button>
+      <button id="clearAllBtn" class="clear-btn">Clear All</button>
+    </div>
   </div>
   
   <div id="clipContainer">
