@@ -51,10 +51,19 @@ async function renderClippedPages() {
       entriesDiv.className = 'group-entries';
 
       // Group header: title, toggle, delete
-      const deleteGroupBtn = document.createElement('button');
-      deleteGroupBtn.className = 'group-delete-btn';
-      deleteGroupBtn.textContent = '×';
-      deleteGroupBtn.title = 'Delete group';
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delete-btn';
+      delBtn.textContent = '×';
+      delBtn.title = 'Delete all clips for this group';
+      delBtn.onclick = async () => {
+        try {
+          const pagesToDelete = groupPages;
+          await Promise.all(pagesToDelete.map(p => WebpageClipperDB.deletePage(p.id)));
+          await renderClippedPages();
+        } catch (err) {
+          console.error('Error deleting group:', err);
+        }
+      };
 
       const headerDiv = document.createElement('div');
       headerDiv.className = 'group-header';
@@ -65,9 +74,7 @@ async function renderClippedPages() {
       const titleSpan = document.createElement('span');
       titleSpan.textContent = groupPages[0].title;
 
-      const buttonWrap = document.createElement('span');
-      buttonWrap.appendChild(deleteGroupBtn);
-
+      
       const titleWrapper = document.createElement('div');
       titleWrapper.className = 'group-title-wrapper';
       titleWrapper.addEventListener('click', () => {
@@ -77,7 +84,7 @@ async function renderClippedPages() {
       });
       titleWrapper.appendChild(titleSpan);
       headerDiv.appendChild(titleWrapper);
-      headerDiv.appendChild(deleteGroupBtn);
+      headerDiv.appendChild(delBtn);
 
       groupDiv.appendChild(headerDiv);
       groupDiv.appendChild(entriesDiv);
@@ -87,12 +94,7 @@ async function renderClippedPages() {
         const entry = document.createElement('div');
         entry.className = 'extraction-item';
 
-        const delBtn = document.createElement('button');
-        delBtn.className = 'delete-btn';
-        delBtn.dataset.id = page.id;
-        delBtn.textContent = '×';
-        entry.appendChild(delBtn);
-
+        
         const dateDiv = document.createElement('div');
         dateDiv.className = 'clip-date';
         dateDiv.textContent = formatDate(page.timestamp);
