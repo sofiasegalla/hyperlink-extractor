@@ -51,28 +51,6 @@ function sendLinkData(action, data) {
   });
 }
 
-/**
- * Extract from the entire document, copy to clipboard, then send.
- */
-async function handleExtractAll() {
-  const links = extractHyperLinks(document);
-
-  // 1) Copy hrefs (one per line) into the clipboard
-  const linkText = links.map(l => l.href).join('\n');
-  const finalText = prompt ? `${prompt}\n\n${linkText}` : linkText;
-  await navigator.clipboard.writeText(finalText);
-
-  try {
-    await navigator.clipboard.writeText(finalText);
-    console.log('✅ Links copied to clipboard');
-  } catch (e) {
-    console.warn('❌ Clipboard write failed:', e);
-  }
-
-  // 2) Now send into background/db
-  sendLinkData('extractAllLinks', buildPageData(links));
-}
-
 
 /**
  * Extract only from the user’s selection, copy to clipboard, then send.
@@ -102,7 +80,7 @@ async function handleExtractSelection(userPrompt = '') {
     copyMode = 'urls';
   }
 
-  // Build clipboard text
+  // Build clipboard text based on mode
   let text = '';
   if (copyMode === 'urls') {
     text = links.map(l => l.href).join('\n');
@@ -134,12 +112,31 @@ async function handleExtractSelection(userPrompt = '') {
   // Combine with prompt
   const finalText = userPrompt ? `${userPrompt}\n\n${text}` : text;
 
+  // Check autoCopy setting
+  let autoCopy = true;
   try {
-    await navigator.clipboard.writeText(finalText);
-    console.log('✅ Links copied to clipboard');
-    showCopyNotificationOnPage();
+    const storage = await new Promise(resolve => {
+      chrome.storage && chrome.storage.local
+        ? chrome.storage.local.get({ autoCopy: true }, resolve)
+        : resolve({ autoCopy: true });
+    });
+    autoCopy = storage.autoCopy;
   } catch (e) {
-    console.warn('❌ Clipboard write failed:', e);
+    console.warn('⚠ Failed to read autoCopy setting, defaulting to true');
+    autoCopy = true;
+  }
+
+  // Conditionally copy to clipboard and show notification
+  if (autoCopy) {
+    try {
+      await navigator.clipboard.writeText(finalText);
+      console.log('✅ Links copied to clipboard');
+      showCopyNotificationOnPage();
+    } catch (e) {
+      console.warn('❌ Clipboard write failed:', e);
+    }
+  } else {
+    console.log('🚫 Auto-copy disabled: skipping clipboard write and notification');
   }
 
   // Send data (with rawHtml if you want full text)

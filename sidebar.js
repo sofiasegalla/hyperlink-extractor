@@ -289,6 +289,18 @@ async function initialize() {
         }
         chrome.storage.local.set({ savedPrompt: getSelectedPrompt() });
       });
+
+      // for auto-copy toggle
+      const autoCopyToggle = document.getElementById('autoCopyToggle');
+
+      // Load saved state
+      const { autoCopy = true } = await chrome.storage.local.get({ autoCopy: true });
+      autoCopyToggle.checked = autoCopy;
+
+      // Save when user toggles
+      autoCopyToggle.addEventListener('change', () => {
+        chrome.storage.local.set({ autoCopy: autoCopyToggle.checked });
+      });
         
     await renderClippedPages();
   } catch (error) {
