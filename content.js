@@ -33,7 +33,8 @@ function buildPageData(links, html) {
     url: window.location.href,
     timestamp: new Date().toISOString(),
     links,
-    linkCount: links.length
+    linkCount: links.length,
+    selected: true
   };
   if (html !== undefined) {
     data.html = html;

@@ -12,7 +12,7 @@ html, body, * {
   font-size: 3em;
   padding: 18px 0px 12px 0px;
   border-radius: 14px;
-  margin: 0px;
+  margin: 0px 0px 14px 0px;
   text-align: center;
   letter-spacing: 0.5px;
   box-shadow: 0 2px 8px rgba(58,80,107,0.06);
@@ -27,7 +27,7 @@ html, body, * {
   font-size: 1em;
   padding: 10px 14px 8px 14px;
   border-radius: 14px;
-  margin: 14px 0 16px 0;
+  margin: 14px 0 8px 0;
   box-shadow: 0 2px 8px rgba(58,80,107,0.10);
   display: flex;
   align-items: center;
@@ -45,7 +45,7 @@ html, body, * {
 .copy-mode-block select {
   font-family: 'Spartan', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-size: 0.97em;
-  background: #6a87b3;
+  background: #506f96;
   color: #fff;
   border: none;
   border-radius: 7px;
@@ -212,18 +212,22 @@ body {
 }
 .settings-panel {
   display: flex;
-  align-items: center;
+  color: #fff;
+  align-items: flex-start;
+  flex-direction: column; /* or row, depending on your layout needs */
   gap: 0.5em;
   margin-bottom: 1em;
   padding: 0.5em;
-  background: #fff;
+  background: #3A506B;
   border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .settings-panel select {
+  background: #506f96;
+  color: #fff;
   padding: 4px 8px;
-  border: 1px solid #ccc;
+  border: 1px solid #506f96;
   border-radius: 4px;
   font-size: 0.9em;
 }
@@ -341,4 +345,94 @@ body {
   margin-bottom: 2em;
   margin-top: 1em;
   padding: 0.5em 0.8em 1em 0.8em;
+}
+
+
+ /* New styles for the copy button and checkboxes */
+ .copy-selected-btn {
+  font-family: 'Spartan', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 600;
+  font-size: 1em;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 0;
+  width: 100%;
+  margin-top: 10px;
+  cursor: pointer;
+  background-color: #1a73e8; /* Bold blue to stand out */
+  color: white;
+  box-shadow: 0 2px 8px rgba(58,80,107,0.13);
+  transition: background 0.2s ease;
+}
+
+.copy-selected-btn:hover {
+  background-color: #155cc4; /* Darker blue on hover */
+}
+
+.page-checkbox {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.select-all-btn,
+.clear-btn {
+  font-family: 'Spartan', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 600;
+  font-size: 0.9em;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(58,80,107,0.13);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.select-all-btn {
+  background-color: #e7e7e7;
+  color: #333;
+  margin-bottom: 6px; /* Adds vertical space between the two buttons */
+}
+
+.select-all-btn:hover {
+  background-color: #d7d7d7;
+}
+
+.clear-btn {
+  background-color: #e7e7e7;
+  color: #333;
+}
+
+.clear-btn:hover {
+  background-color: #d7d7d7;
+}
+
+#promptSelector {
+  max-width: 100%;
+  box-sizing: border-box;
+  flex: 1;
+}
+
+#customPrompt {
+  background: #506f96;
+  color: #fff;
+  padding: 4px 8px;
+  border: 1px solid #506f96;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-family: 'Spartan', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical; /* optional: allows the user to resize it */
+}
+
+#customPrompt::placeholder {
+  color: #cfd8e3; /* soft light gray-blue, feel free to tweak */
+  opacity: 1;     /* ensures the color appears as specified */
 }

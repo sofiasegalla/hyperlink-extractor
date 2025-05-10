@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="sidebar.css">
 </head>
 <body>
+  <div class="link-extractor-titlebar">
+    Link Extractor
+  </div>
   <div id="promptSelectorContainer" class="settings-panel">
     <label for="promptSelector"><strong>Select a Prompt:</strong></label>
     <select id="promptSelector">
@@ -24,10 +27,6 @@
   <!-- Notification for copy -->
   <div id="copyNotification" class="copy-notification" style="display:none;">Links copied to clipboard</div>
 
-  <div class="link-extractor-titlebar">
-    Link Extractor
-  </div>
-
   <!-- Settings panel -->
   <div class="copy-mode-block">
     <label style="min-width:80px;" for="copyModeSelect">Copy mode:</label>
@@ -36,6 +35,7 @@
       <option value="labels">[Text] URL</option>
       <option value="full">Full text + URLs</option>
     </select>
+  
     <div class="autocopy-toggle-container">
       <label class="switch">
         <input type="checkbox" id="autoCopyToggle" checked>
@@ -44,10 +44,18 @@
       <span style="margin-left:8px; font-size:1em;">Auto-copy</span>
     </div>
   </div>
+  
+  <!-- original selected links button -->
+  <button id="copySelectedBtn" class="copy-selected-btn" style="margin-top: 10px;">
+    Copy Selected Links
+  </button>
 
   <div class="extracted-hyperlinks-bar">
     <span class="extracted-hyperlinks-title">Extracted Hyperlinks</span>
-    <button id="clearAllBtn" class="clear-all-btn">Clear All</button>
+    <div>
+      <button id="selectAllBtn" class="select-all-btn">Select All</button>
+      <button id="clearAllBtn" class="clear-btn">Clear All</button>
+    </div>
   </div>
   
   <div id="clipContainer">

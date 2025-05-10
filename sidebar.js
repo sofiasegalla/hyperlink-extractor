@@ -6,11 +6,124 @@
 // Elements
 const clipContainer = document.getElementById('clipContainer');
 const clearAllBtn   = document.getElementById('clearAllBtn');
+const copySelectedBtn = document.getElementById('copySelectedBtn');
+const selectAllBtn = document.getElementById('selectAllBtn');
 
 // Format ISO timestamp → human date/time
 function formatDate(dateString) {
   const date = new Date(dateString);
   return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+}
+
+function toggleSelectAll() {
+  const checkboxes = document.querySelectorAll('.page-checkbox');
+  
+  // Check if all are selected (or if there are no checkboxes)
+  const allSelected = checkboxes.length > 0 && 
+    Array.from(checkboxes).every(cb => cb.checked);
+  
+  // Toggle selection
+  checkboxes.forEach(cb => {
+    cb.checked = !allSelected;
+  });
+  
+  // Update button text
+  updateSelectAllButtonText();
+}
+
+// Update the select all button text based on checkbox state
+function updateSelectAllButtonText() {
+  const checkboxes = document.querySelectorAll('.page-checkbox');
+  
+  // Check if all are selected
+  const allSelected = checkboxes.length > 0 && 
+    Array.from(checkboxes).every(cb => cb.checked);
+  
+  // Set text based on selection state
+  selectAllBtn.textContent = allSelected ? 'Deselect All' : 'Select All';
+}
+
+// Copy selected links to clipboard
+async function copySelectedLinks() {
+  try {
+    const pages = await WebpageClipperDB.getAllPages();
+    const selectedCheckboxes = document.querySelectorAll('.page-checkbox:checked');
+    
+    if (!selectedCheckboxes.length) {
+      alert('Please select at least one webpage to copy links from.');
+      return;
+    }
+    
+    // Get selected titles (each checkbox represents a website)
+    const selectedTitles = Array.from(selectedCheckboxes).map(cb => cb.dataset.title);
+    
+    // Filter pages by selected titles
+    const selectedPages = pages.filter(page => selectedTitles.includes(page.title));
+    
+    // Get copy mode
+    const copyMode = document.getElementById('copyModeSelect').value;
+    
+    // Prepare text based on copy mode
+    let clipboardText = '';
+    
+    // Group by title
+    const groupedByTitle = {};
+    selectedPages.forEach(page => {
+      if (!groupedByTitle[page.title]) {
+        groupedByTitle[page.title] = [];
+      }
+      groupedByTitle[page.title].push(page);
+    });
+    
+    // Process each title (website)
+    Object.keys(groupedByTitle).forEach(title => {
+      const pagesForTitle = groupedByTitle[title];
+      
+      // Collect all links from all pages with this title
+      let allLinks = [];
+      pagesForTitle.forEach(page => {
+        allLinks = allLinks.concat(page.links || []);
+      });
+      
+      switch (copyMode) {
+        case 'urls':
+          // URLs only
+          clipboardText += allLinks.map(link => link.href).join('\n');
+          break;
+        case 'labels':
+          // [Text] URL format
+          clipboardText += allLinks.map(link => `[${link.text || ''}] ${link.href}`).join('\n');
+          break;
+        case 'full':
+          // Full text + links
+          clipboardText += `Title: ${title}\n`;
+          clipboardText += `URL: ${pagesForTitle[0].url}\n`;
+          clipboardText += `Date: ${formatDate(new Date())}\n`;
+          clipboardText += 'Links:\n';
+          clipboardText += allLinks.map(link => `- ${link.text || link.href}: ${link.href}`).join('\n');
+          clipboardText += '\n\n';
+          break;
+      }
+      
+      if (copyMode !== 'full' && Object.keys(groupedByTitle).length > 1) {
+        clipboardText += '\n';
+      }
+    });
+    
+    // Copy to clipboard
+    await navigator.clipboard.writeText(clipboardText);
+    
+    // Show confirmation
+    const originalText = copySelectedBtn.textContent;
+    copySelectedBtn.textContent = 'Copied!';
+    setTimeout(() => {
+      copySelectedBtn.textContent = originalText;
+    }, 2000);
+    
+  } catch (error) {
+    console.error('Error copying selected links:', error);
+    alert('Failed to copy selected links: ' + error.message);
+  }
 }
 
 // Main render function
@@ -26,12 +139,17 @@ async function renderClippedPages() {
           <p>Click "Extract Hyperlinks" in the popup to save a link</p>
         </div>
       `;
+
+      // Disable select all button when no pages
+      selectAllBtn.disabled = true;
       return;
     }
 
+    selectAllBtn.disabled = false;
+
     // Group pages by URL
     const groups = pages.reduce((acc, page) => {
-      const key = page.url;
+      const key = page.title;
       (acc[key] = acc[key] || []).push(page);
       return acc;
     }, {});
@@ -50,7 +168,7 @@ async function renderClippedPages() {
       const entriesDiv = document.createElement('div');
       entriesDiv.className = 'group-entries';
 
-      // Group header: title, toggle, delete
+      // Group header: checkbox, title, toggle, delete
       const delBtn = document.createElement('button');
       delBtn.className = 'delete-btn';
       delBtn.textContent = '×';
@@ -71,17 +189,31 @@ async function renderClippedPages() {
       headerDiv.style.alignItems = 'center';
       headerDiv.style.justifyContent = 'space-between';
 
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'page-checkbox';
+      checkbox.dataset.title = groupPages[0].title;
+      
+      // Add change event listener to update select all button text
+      checkbox.addEventListener('change', updateSelectAllButtonText);
+
       const titleSpan = document.createElement('span');
       titleSpan.textContent = groupPages[0].title;
 
       
       const titleWrapper = document.createElement('div');
       titleWrapper.className = 'group-title-wrapper';
-      titleWrapper.addEventListener('click', () => {
+      titleWrapper.addEventListener('click', (e) => {
+        // Don't toggle when clicking the checkbox
+        if (e.target === checkbox) return;
+
         const isHidden = entriesDiv.style.display === 'none';
         entriesDiv.style.display = isHidden ? 'block' : 'none';
         titleSpan.classList.toggle('collapsed', !isHidden);
       });
+
+      titleWrapper.appendChild(checkbox);
       titleWrapper.appendChild(titleSpan);
       headerDiv.appendChild(titleWrapper);
       headerDiv.appendChild(delBtn);
@@ -209,6 +341,9 @@ async function renderClippedPages() {
       });
     });
 
+    // Update select all button text initially
+    updateSelectAllButtonText();
+
   } catch (error) {
     console.error('Error rendering clipped pages:', error);
     clipContainer.innerHTML = `
@@ -301,6 +436,12 @@ async function initialize() {
       autoCopyToggle.addEventListener('change', () => {
         chrome.storage.local.set({ autoCopy: autoCopyToggle.checked });
       });
+
+          // Add event listener for copy selected button
+      copySelectedBtn.addEventListener('click', copySelectedLinks);
+      
+      // Add event listener for select all button
+      selectAllBtn.addEventListener('click', toggleSelectAll);
         
     await renderClippedPages();
   } catch (error) {
