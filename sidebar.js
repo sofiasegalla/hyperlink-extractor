@@ -46,85 +46,102 @@ function updateSelectAllButtonText() {
 // Copy selected links to clipboard
 async function copySelectedLinks() {
   try {
+    // Get currently selected prompt
+    const promptText = getSelectedPrompt();
+
+    // Fetch all saved pages
     const pages = await WebpageClipperDB.getAllPages();
     const selectedCheckboxes = document.querySelectorAll('.page-checkbox:checked');
-    
+
     if (!selectedCheckboxes.length) {
       alert('Please select at least one webpage to copy links from.');
       return;
     }
-    
-    // Get selected titles (each checkbox represents a website)
-    const selectedTitles = Array.from(selectedCheckboxes).map(cb => cb.dataset.title);
-    
-    // Filter pages by selected titles
-    const selectedPages = pages.filter(page => selectedTitles.includes(page.title));
-    
-    // Get copy mode
+
+    // Determine copy mode
     const copyMode = document.getElementById('copyModeSelect').value;
-    
-    // Prepare text based on copy mode
     let clipboardText = '';
-    
-    // Group by title
-    const groupedByTitle = {};
-    selectedPages.forEach(page => {
-      if (!groupedByTitle[page.title]) {
-        groupedByTitle[page.title] = [];
+
+    // If full mode, serialize each page's html with links
+    if (copyMode === 'full') {
+      // Helper to serialize nodes preserving link markdown
+      function serializeWithLinks(node) {
+        let out = '';
+        node.childNodes.forEach(child => {
+          if (child.nodeType === Node.TEXT_NODE) {
+            out += child.textContent;
+          } else if (child.nodeType === Node.ELEMENT_NODE && child.tagName.toLowerCase() === 'a') {
+            const text = child.textContent.trim();
+            const href = child.getAttribute('href');
+            out += text && href ? `[${text}](${href})` : text;
+          } else if (child.nodeType === Node.ELEMENT_NODE) {
+            out += serializeWithLinks(child);
+          }
+        });
+        return out;
       }
-      groupedByTitle[page.title].push(page);
-    });
-    
-    // Process each title (website)
-    Object.keys(groupedByTitle).forEach(title => {
-      const pagesForTitle = groupedByTitle[title];
-      
-      // Collect all links from all pages with this title
-      let allLinks = [];
-      pagesForTitle.forEach(page => {
-        allLinks = allLinks.concat(page.links || []);
+
+      for (const cb of selectedCheckboxes) {
+        const title = cb.dataset.title;
+        // Find the latest page entry for this title
+        const page = pages
+          .filter(p => p.title === title)
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+
+        // Build header
+        clipboardText += `Title: ${page.title}\n`;
+        clipboardText += `URL: ${page.url}\n`;
+        clipboardText += `Date: ${formatDate(page.timestamp)}\n\n`;
+
+        // Serialize full content
+        const container = document.createElement('div');
+        container.innerHTML = page.html || '';
+        const serialized = serializeWithLinks(container)
+          .replace(/\s+/g, ' ')
+          .trim();
+        clipboardText += serialized + '\n\n';
+      }
+
+    } else {
+      // For urls or labels modes, group by title and list link arrays
+      const selectedTitles = Array.from(selectedCheckboxes).map(cb => cb.dataset.title);
+      const selectedPages = pages.filter(page => selectedTitles.includes(page.title));
+      const groupedByTitle = {};
+      selectedPages.forEach(page => {
+        if (!groupedByTitle[page.title]) groupedByTitle[page.title] = [];
+        groupedByTitle[page.title].push(...(page.links || []));
       });
-      
-      switch (copyMode) {
-        case 'urls':
-          // URLs only
-          clipboardText += allLinks.map(link => link.href).join('\n');
-          break;
-        case 'labels':
-          // [Text] URL format
-          clipboardText += allLinks.map(link => `[${link.text || ''}] ${link.href}`).join('\n');
-          break;
-        case 'full':
-          // Full text + links
-          clipboardText += `Title: ${title}\n`;
-          clipboardText += `URL: ${pagesForTitle[0].url}\n`;
-          clipboardText += `Date: ${formatDate(new Date())}\n`;
-          clipboardText += 'Links:\n';
-          clipboardText += allLinks.map(link => `- ${link.text || link.href}: ${link.href}`).join('\n');
-          clipboardText += '\n\n';
-          break;
-      }
-      
-      if (copyMode !== 'full' && Object.keys(groupedByTitle).length > 1) {
-        clipboardText += '\n';
-      }
-    });
-    
-    // Copy to clipboard
+
+      Object.keys(groupedByTitle).forEach((title, i, all) => {
+        const links = groupedByTitle[title];
+        if (copyMode === 'urls') {
+          clipboardText += links.map(l => l.href).join('\n');
+        } else if (copyMode === 'labels') {
+          clipboardText += links.map(l => `[${l.text || ''}] ${l.href}`).join('\n');
+        }
+        if (i < all.length - 1) clipboardText += '\n';
+      });
+    }
+
+    // Prepend prompt if present
+    if (promptText) {
+      clipboardText = `${promptText}\n\n${clipboardText}`;
+    }
+
+    // Copy and feedback
     await navigator.clipboard.writeText(clipboardText);
-    
-    // Show confirmation
     const originalText = copySelectedBtn.textContent;
     copySelectedBtn.textContent = 'Copied!';
     setTimeout(() => {
       copySelectedBtn.textContent = originalText;
     }, 2000);
-    
+
   } catch (error) {
     console.error('Error copying selected links:', error);
     alert('Failed to copy selected links: ' + error.message);
   }
 }
+
 
 // Main render function
 async function renderClippedPages() {
