@@ -125,7 +125,7 @@ async function copySelectedLinks() {
 
     // Prepend prompt if present
     if (promptText) {
-      clipboardText = `${promptText}\n\n${clipboardText}`;
+      clipboardText = `${promptText}\n\n"""\n\n${clipboardText}\n\n"""`;
     }
 
     // Copy and feedback
@@ -407,19 +407,10 @@ async function initialize() {
       // Load saved prompt from storage on startup
       const { savedPrompt = '' } = await chrome.storage.local.get({ savedPrompt: '' });
 
-      if (savedPrompt) {
-        if (savedPrompt !== 'summarize' && savedPrompt !== 'analyze' && savedPrompt !== 'compare') {
-          // Treat as custom prompt
-          promptSelector.value = 'custom';
-          promptSelector.style.display = 'none';
-          customPrompt.style.display = 'block';
-          customPrompt.value = savedPrompt;
-        } else {
-          // Predefined prompt
-          promptSelector.value = savedPrompt;
-          customPrompt.style.display = 'none';
-          promptSelector.style.display = 'inline-block';
-        }
+      if (savedPrompt && ![...['Convert the list of links into APA style citations.', 'Generate a concise summary of the content found at these links.', 'Identify which of these links appear to be academic and reliable, and are particularly relevant to the current topic of investigation.']].includes(savedPrompt)) {
+        promptSelector.style.display = 'none'; customPrompt.style.display = 'block'; customPrompt.value = savedPrompt;
+      } else {
+        promptSelector.value = savedPrompt;
       }
 
       // Handle dropdown → custom input
@@ -473,10 +464,9 @@ async function initialize() {
 }
 
 function getSelectedPrompt() {
-  if (promptSelector.value === 'custom') {
-    return customPrompt.value.trim();
-  }
-  return promptSelector.value;
+  const sel = document.getElementById('promptSelector');
+  const custom = document.getElementById('customPrompt');
+  return sel.value === 'custom' ? custom.value.trim() : sel.value;
 }
 
 // Clear all pages
