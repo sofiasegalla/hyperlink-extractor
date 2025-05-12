@@ -6,7 +6,7 @@
 // Register the side panel
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
-// Helper to append a clip to storage
+// Helper to append a link to storage
 async function queueClip(data) {
   const { pendingClips = [] } = await chrome.storage.local.get({ pendingClips: [] });
   pendingClips.push(data);

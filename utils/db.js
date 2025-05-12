@@ -6,7 +6,7 @@
 
 const DB_NAME = 'HyperlinkExtractorDB';
 const DB_VERSION = 2;
-const STORE_NAME = 'savedLinks'; // was 'clippedPages'
+const STORE_NAME = 'savedLinks'; 
 
 // Database connection
 let db = null;

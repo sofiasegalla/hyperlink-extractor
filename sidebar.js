@@ -250,31 +250,316 @@ async function renderExtractedLinks() {
         entry.appendChild(dateDiv);
 
         // Generate preview from html field: first 3 and last 3 words of visible text (excluding links)
-        let preview = '';
-        if (page.html) {
-          // Parse HTML, remove all <a> tags and their contents, extract visible text
-          const container = document.createElement('div');
-          container.innerHTML = page.html;
-          // Remove all <a> tags but keep their text content
-          container.querySelectorAll('a').forEach(a => {
-            // Replace the <a> with its text content
-            const textNode = document.createTextNode(a.textContent || '');
-            a.parentNode.replaceChild(textNode, a);
-          });
-          // Get the visible text
-          const text = container.textContent.trim().replace(/\s+/g, ' ');
-          const words = text.split(' ').filter(Boolean);
-          if (words.length <= 6) {
-            preview = words.join(' ');
+        function createSnippetWithHover(page) {
+          // Generate preview from html field: first 3 and last 3 words of visible text (excluding links)
+          let preview = '';
+          let fullText = '';
+          if (page.html) {
+            // Parse HTML, remove all <a> tags and their contents, extract visible text
+            const container = document.createElement('div');
+            container.innerHTML = page.html;
+            
+            // Remove all <a> tags but keep their text content
+            container.querySelectorAll('a').forEach(a => {
+              // Replace the <a> with its text content
+              const textNode = document.createTextNode(a.textContent || '');
+              a.parentNode.replaceChild(textNode, a);
+            });
+            
+            // Get the visible text
+            const text = container.textContent.trim().replace(/\s+/g, ' ');
+            fullText = text;
+            const words = text.split(' ').filter(Boolean);
+            
+            if (words.length <= 6) {
+              preview = words.join(' ');
+            } else {
+              preview = words.slice(0, 3).join(' ') + ' ... ' + words.slice(-3).join(' ');
+            }
           } else {
-            preview = words.slice(0, 3).join(' ') + ' ... ' + words.slice(-3).join(' ');
+            preview = '';
           }
-        } else {
-          preview = '';
+          
+          // Create the snippet div with hover capabilities
+          const snipDiv = document.createElement('div');
+          snipDiv.className = 'clip-snippet';
+          snipDiv.textContent = preview;
+          
+          if (fullText) {
+            // Add hover functionality
+            const tooltipDiv = document.createElement('div');
+            tooltipDiv.className = 'preview-tooltip';
+            
+            // Limit tooltip content length
+            let tooltipText = fullText;
+            if (tooltipText.length > 500) {
+              tooltipText = tooltipText.substring(0, 500) + '...';
+            }
+            
+            tooltipDiv.textContent = tooltipText;
+            snipDiv.appendChild(tooltipDiv);
+            
+            // Add event listeners for hover
+            let tooltipTimer;
+            
+            snipDiv.addEventListener('mouseenter', () => {
+              tooltipTimer = setTimeout(() => {
+                tooltipDiv.style.display = 'block';
+                
+                // Position tooltip to stay in viewport
+                const rect = snipDiv.getBoundingClientRect();
+                const tooltipRect = tooltipDiv.getBoundingClientRect();
+                
+                // Check if tooltip would go off-screen to the right
+                if (rect.left + tooltipRect.width > window.innerWidth) {
+                  tooltipDiv.style.left = 'auto';
+                  tooltipDiv.style.right = '0';
+                }
+                
+                // Check if tooltip would go off-screen to the bottom
+                if (rect.bottom + tooltipRect.height > window.innerHeight) {
+                  tooltipDiv.style.top = 'auto';
+                  tooltipDiv.style.bottom = '110%';
+                }
+              }, 300); // Small delay to prevent flickering
+            });
+            
+            snipDiv.addEventListener('mouseleave', () => {
+              clearTimeout(tooltipTimer);
+              tooltipDiv.style.display = 'none';
+            });
+            
+            // Click to scroll to content in the page
+            snipDiv.addEventListener('click', () => {
+              // Find this content in the original page
+              scrollToContentInPage(page, fullText);
+            });
+          }
+          
+          return snipDiv;
         }
-        const snipDiv = document.createElement('div');
-        snipDiv.className = 'clip-snippet';
-        snipDiv.textContent = preview;
+        
+        // Function to scroll to text on the original page
+        function scrollToContentInPage(page, text) {
+          // Check if this page is currently open
+          chrome.tabs.query({}, (tabs) => {
+            const pageUrl = page.url;
+            const matchingTab = tabs.find(tab => tab.url === pageUrl);
+            
+            if (matchingTab) {
+              // Focus the tab
+              chrome.tabs.update(matchingTab.id, { active: true }, () => {
+                // Then scroll to content
+                executeScrollToContent(matchingTab.id, text);
+              });
+            } else {
+              // Tab is not open, open it and then scroll
+              chrome.tabs.create({ url: pageUrl }, (newTab) => {
+                // Create a one-time listener for this specific tab
+                const listenerId = `scroll_listener_${newTab.id}`;
+                
+                // Store a function reference we can remove later
+                chrome.storage.local.get('activeScrollListeners', (data) => {
+                  const activeListeners = data.activeScrollListeners || {};
+                  
+                  // Clean up any previous listener for this tab (shouldn't exist but just in case)
+                  if (activeListeners[listenerId]) {
+                    chrome.tabs.onUpdated.removeListener(activeListeners[listenerId]);
+                  }
+                  
+                  // Create new listener function
+                  const listenerFn = function(tabId, changeInfo) {
+                    if (tabId === newTab.id && changeInfo.status === 'complete') {
+                      // Wait a bit extra for page to fully render
+                      setTimeout(() => {
+                        executeScrollToContent(newTab.id, text);
+                        
+                        // Clean up the listener - it's one-time use
+                        chrome.tabs.onUpdated.removeListener(activeListeners[listenerId]);
+                        delete activeListeners[listenerId];
+                        chrome.storage.local.set({ activeScrollListeners: activeListeners });
+                      }, 1000); // A little extra time to ensure the page is fully rendered
+                    }
+                  };
+                  
+                  // Save reference to the listener
+                  activeListeners[listenerId] = listenerFn;
+                  chrome.storage.local.set({ activeScrollListeners: activeListeners });
+                  
+                  // Add the listener
+                  chrome.tabs.onUpdated.addListener(listenerFn);
+                });
+              });
+            }
+          });
+        }
+        
+        // Extract the execution script to a reusable function
+        function executeScrollToContent(tabId, text) {
+          chrome.scripting.executeScript({
+            target: { tabId: tabId },
+            func: findAndScrollToTextFunc,
+            args: [text]
+          });
+        }
+        
+        // Function to be injected into the page
+        function findAndScrollToTextFunc(fullText) {
+          return new Promise((resolve) => {
+            // Create several search options from different portions of the text
+            // to increase chance of finding a match
+            const searchOptions = [
+              fullText.substring(0, Math.min(100, fullText.length)), // First 100 chars
+              fullText.substring(0, Math.min(50, fullText.length)),  // First 50 chars
+              fullText.substring(0, Math.min(25, fullText.length))   // First 25 chars
+            ];
+            
+            // Function to normalize text for better matching
+            function normalizeText(text) {
+              return text.trim().replace(/\s+/g, ' ').toLowerCase();
+            }
+            
+            // Function to find and scroll to text
+            function findAndScrollToText() {
+              // Create a text node searcher to find all text in the document
+              const textNodes = [];
+              const walk = document.createTreeWalker(
+                document.body, 
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+              );
+              
+              let currentNode;
+              while (currentNode = walk.nextNode()) {
+                if (currentNode.textContent.trim()) {
+                  textNodes.push(currentNode);
+                }
+              }
+              
+              // Normalize all search options
+              const normalizedOptions = searchOptions.map(opt => normalizeText(opt));
+              
+              // Try to find a match using each search option
+              let bestMatch = null;
+              let bestMatchScore = 0;
+              let bestMatchNode = null;
+              
+              for (const node of textNodes) {
+                const nodeText = normalizeText(node.textContent);
+                
+                for (let i = 0; i < normalizedOptions.length; i++) {
+                  const searchOption = normalizedOptions[i];
+                  
+                  // Check for exact containment
+                  if (nodeText.includes(searchOption)) {
+                    // Calculate how good of a match this is
+                    // (prefer longer matches and matches that are closer to the beginning)
+                    const matchScore = searchOption.length * 10 - nodeText.indexOf(searchOption);
+                    
+                    if (matchScore > bestMatchScore) {
+                      bestMatch = searchOption;
+                      bestMatchScore = matchScore;
+                      bestMatchNode = node;
+                    }
+                  }
+                }
+              }
+              
+              // If we found a match, scroll to it
+              if (bestMatchNode) {
+                // Get an appropriate element to scroll to
+                // We'll walk up the DOM to find a good block element
+                let elementToScroll = bestMatchNode.parentElement;
+                
+                // Keep walking up to find a block element that's big enough to be meaningful
+                // But stop at certain levels to avoid going too high
+                const stopElements = ['article', 'section', 'div', 'main', 'body'];
+                while (elementToScroll && 
+                       elementToScroll.offsetHeight < 30 && 
+                       !stopElements.includes(elementToScroll.tagName.toLowerCase())) {
+                  elementToScroll = elementToScroll.parentElement;
+                }
+                
+                // Now scroll to this element
+                elementToScroll.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center'
+                });
+                
+                // Add a clear visual indicator by creating a highlight overlay
+                const highlightOverlay = document.createElement('div');
+                highlightOverlay.style.position = 'absolute';
+                highlightOverlay.style.zIndex = '9999';
+                highlightOverlay.style.backgroundColor = 'rgba(255, 255, 0, 0.3)';
+                highlightOverlay.style.border = '2px solid #ffa500';
+                highlightOverlay.style.boxShadow = '0 0 10px rgba(255, 165, 0, 0.7)';
+                highlightOverlay.style.pointerEvents = 'none'; // Allow clicking through
+                
+                // Position and size the overlay to match the element
+                const rect = elementToScroll.getBoundingClientRect();
+                highlightOverlay.style.left = (window.scrollX + rect.left) + 'px';
+                highlightOverlay.style.top = (window.scrollY + rect.top) + 'px';
+                highlightOverlay.style.width = rect.width + 'px';
+                highlightOverlay.style.height = rect.height + 'px';
+                
+                // Add to document and set a timeout to remove
+                document.body.appendChild(highlightOverlay);
+                
+                // Animate the highlight
+                let opacity = 0.3;
+                let fadeIn = true;
+                const pulseAnimation = setInterval(() => {
+                  if (fadeIn) {
+                    opacity += 0.1;
+                    if (opacity >= 0.6) fadeIn = false;
+                  } else {
+                    opacity -= 0.1;
+                    if (opacity <= 0.3) fadeIn = true;
+                  }
+                  highlightOverlay.style.backgroundColor = `rgba(255, 255, 0, ${opacity})`;
+                }, 100);
+                
+                // Remove after a few seconds
+                setTimeout(() => {
+                  clearInterval(pulseAnimation);
+                  if (document.body.contains(highlightOverlay)) {
+                    document.body.removeChild(highlightOverlay);
+                  }
+                }, 2000);
+                
+                return true;
+              }
+              
+              return false;
+            }
+            
+            // If document is still loading, wait a bit
+            if (document.readyState !== 'complete') {
+              window.addEventListener('load', () => {
+                setTimeout(() => {
+                  const found = findAndScrollToText();
+                  resolve(found);
+                }, 500);
+              });
+            } else {
+              // Try immediately and then retry after a small delay if not found
+              let found = findAndScrollToText();
+              
+              // If not found on first try, wait and try again
+              // (sometimes page needs more time to fully render)
+              if (!found) {
+                setTimeout(() => {
+                  found = findAndScrollToText();
+                  resolve(found);
+                }, 800);
+              } else {
+                resolve(found);
+              }
+            }
+          });
+        }    
+        const snipDiv = createSnippetWithHover(page);
         entry.appendChild(snipDiv);
 
         const contentDiv = document.createElement('div');

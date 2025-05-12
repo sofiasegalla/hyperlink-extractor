@@ -478,3 +478,36 @@ body {
 #clearSearchBtn:hover {
   color: #333;
 }
+
+.clip-snippet {
+  position: relative;
+  cursor: pointer;
+}
+
+.clip-snippet:hover {
+  text-decoration: underline;
+  color: #3A506B;
+}
+
+.preview-tooltip {
+  position: absolute;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 100;
+  max-width: 320px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 0.9em;
+  color: #333;
+  top: 110%;
+  left: 0;
+  display: none;
+}
+
+.highlight-text {
+  background-color: #ffff8c;
+  padding: 2px 0;
+}

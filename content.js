@@ -52,7 +52,6 @@ function sendLinkData(action, data) {
   });
 }
 
-
 /**
  * Extract only from the user’s selection, copy to clipboard, then send.
  */
