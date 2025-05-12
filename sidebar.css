@@ -436,3 +436,45 @@ body {
   color: #cfd8e3; /* soft light gray-blue, feel free to tweak */
   opacity: 1;     /* ensures the color appears as specified */
 }
+
+.search-container {
+  position: relative;
+  margin: 16px 0;
+  width: 100%;
+}
+
+#searchInput {
+  width: 100%;
+  padding: 12px 40px 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #d7d7d7;
+  background-color: #fff;
+  font-family: 'Spartan', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 1em;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(58,80,107,0.07);
+  transition: border-color 0.2s ease;
+}
+
+#searchInput:focus {
+  outline: none;
+  border-color: #3A506B;
+}
+
+#clearSearchBtn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  color: #999;
+  cursor: pointer;
+  display: none;
+  padding: 0 8px;
+}
+
+#clearSearchBtn:hover {
+  color: #333;
+}

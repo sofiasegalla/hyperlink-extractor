@@ -386,6 +386,95 @@ async function drainPendingClips() {
   await chrome.storage.local.set({ pendingClips: [] });
 }
 
+
+function setupSearch() {
+  const searchInput = document.getElementById('searchInput');
+  const clearSearchBtn = document.getElementById('clearSearchBtn');
+  
+  // Show/hide clear button based on input content
+  searchInput.addEventListener('input', () => {
+    const hasText = searchInput.value.trim() !== '';
+    clearSearchBtn.style.display = hasText ? 'block' : 'none';
+    filterLinksBySearch(searchInput.value);
+  });
+  
+  // Clear search when button is clicked
+  clearSearchBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    clearSearchBtn.style.display = 'none';
+    filterLinksBySearch('');
+    searchInput.focus();
+  });
+  
+  // Handle escape key to clear search
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      searchInput.value = '';
+      clearSearchBtn.style.display = 'none';
+      filterLinksBySearch('');
+    }
+  });
+}
+
+// Add this function to filter links based on search input
+function filterLinksBySearch(searchTerm) {
+  const normalizedTerm = searchTerm.toLowerCase().trim();
+  const pageGroups = document.querySelectorAll('.page-group');
+  
+  if (!normalizedTerm) {
+    // Show all if no search term
+    pageGroups.forEach(group => group.style.display = 'block');
+    return;
+  }
+  
+  let hasVisibleGroups = false;
+  
+  pageGroups.forEach(group => {
+    const title = group.querySelector('.group-title-wrapper span').textContent.toLowerCase();
+    const linkElements = group.querySelectorAll('.link-list a');
+    
+    // Check if title or any link in this group matches search term
+    const titleMatches = title.includes(normalizedTerm);
+    let linkMatches = false;
+    
+    linkElements.forEach(link => {
+      const linkText = link.textContent.toLowerCase();
+      const linkHref = link.getAttribute('href').toLowerCase();
+      
+      if (linkText.includes(normalizedTerm) || linkHref.includes(normalizedTerm)) {
+        linkMatches = true;
+      }
+    });
+    
+    const showGroup = titleMatches || linkMatches;
+    group.style.display = showGroup ? 'block' : 'none';
+    
+    if (showGroup) {
+      hasVisibleGroups = true;
+    }
+  });
+  
+  // Show "no results" message if nothing matches
+  if (!hasVisibleGroups && normalizedTerm) {
+    let noResults = document.getElementById('noSearchResults');
+    if (!noResults) {
+      noResults = document.createElement('div');
+      noResults.id = 'noSearchResults';
+      noResults.className = 'no-clips';
+      noResults.innerHTML = `<p>No matches found for "${searchTerm}"</p>`;
+      clipContainer.appendChild(noResults);
+    } else {
+      noResults.innerHTML = `<p>No matches found for "${searchTerm}"</p>`;
+      noResults.style.display = 'block';
+    }
+  } else {
+    const noResults = document.getElementById('noSearchResults');
+    if (noResults) {
+      noResults.style.display = 'none';
+    }
+  }
+}
+
 // Initialize DB + render on load
 async function initialize() {
   try {
@@ -452,6 +541,7 @@ async function initialize() {
       selectAllBtn.addEventListener('click', toggleSelectAll);
         
     await renderExtractedLinks();
+    setupSearch();
   } catch (error) {
     console.error('Error initializing database:', error);
     clipContainer.innerHTML = `
