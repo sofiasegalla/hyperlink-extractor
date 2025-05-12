@@ -580,9 +580,11 @@ async function renderExtractedLinks() {
           const toggleBtn = document.createElement('button');
           toggleBtn.className = 'toggle-btn';
           toggleBtn.dataset.id = page.id;
-          toggleBtn.textContent = 'Show more';
-          contentDiv.insertBefore(toggleBtn, ul);
+          toggleBtn.setAttribute('aria-expanded', 'false');
+          toggleBtn.textContent = '▼ Show more';
+          contentDiv.appendChild(toggleBtn);
         }
+        
 
         entry.appendChild(contentDiv);
 
@@ -615,13 +617,15 @@ async function renderExtractedLinks() {
         const listElement = contentDiv.querySelector('.link-list');
         const fullPage = pages.find(p => p.id == id);
         const fullList = fullPage?.links || [];
-
-        const isCollapsed = button.textContent === 'Show more';
+    
+        const isCollapsed = button.getAttribute('aria-expanded') === 'false';
+    
         listElement.innerHTML = (isCollapsed ? fullList : fullList.slice(0, 10)).map(l => `
           <li><a href="${l.href}" target="_blank">${l.text || l.href}</a></li>
         `).join('');
-        button.textContent = isCollapsed ? 'Show less' : 'Show more';
-        contentDiv.insertBefore(button, listElement);
+    
+        button.textContent = isCollapsed ? '▲ Show less' : '▼ Show more';
+        button.setAttribute('aria-expanded', isCollapsed ? 'true' : 'false');
       });
     });
 
