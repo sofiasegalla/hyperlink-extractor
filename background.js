@@ -88,4 +88,4 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   });
 });
 
-console.log('[Background] Webpage Clipper (link-extractor) background script loaded');
+console.log('[Background] Hyperlink Extractor background script loaded');

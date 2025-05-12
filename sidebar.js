@@ -1,5 +1,5 @@
 /**
- * Sidebar script for the Webpage Clipper extension
+ * Sidebar script for the Hyperlink Extractor 
  * Handles displaying and managing clipped pages using IndexedDB
  */
 
@@ -49,8 +49,8 @@ async function copySelectedLinks() {
     // Get currently selected prompt
     const promptText = getSelectedPrompt();
 
-    // Fetch all saved pages
-    const pages = await WebpageClipperDB.getAllPages();
+    // Fetch all saved links
+    const pages = await HyperlinkExtractorDB.getAll();
     const selectedCheckboxes = document.querySelectorAll('.page-checkbox:checked');
 
     if (!selectedCheckboxes.length) {
@@ -144,9 +144,9 @@ async function copySelectedLinks() {
 
 
 // Main render function
-async function renderClippedPages() {
+async function renderExtractedLinks() {
   try {
-    const pages = await WebpageClipperDB.getAllPages();
+    const pages = await HyperlinkExtractorDB.getAll();
     clipContainer.innerHTML = '';
 
     if (!pages.length) {
@@ -189,12 +189,12 @@ async function renderClippedPages() {
       const delBtn = document.createElement('button');
       delBtn.className = 'delete-btn';
       delBtn.textContent = '×';
-      delBtn.title = 'Delete all clips for this group';
+      delBtn.title = 'Delete all links for this group';
       delBtn.onclick = async () => {
         try {
           const pagesToDelete = groupPages;
-          await Promise.all(pagesToDelete.map(p => WebpageClipperDB.deletePage(p.id)));
-          await renderClippedPages();
+          await Promise.all(pagesToDelete.map(p => HyperlinkExtractorDB.deleteById(p.id)));
+          await renderExtractedLinks();
         } catch (err) {
           console.error('Error deleting group:', err);
         }
@@ -314,8 +314,8 @@ async function renderClippedPages() {
       btn.addEventListener('click', async e => {
         const id = parseInt(e.currentTarget.dataset.id, 10);
         try {
-          await WebpageClipperDB.deletePage(id);
-          await renderClippedPages();
+          await HyperlinkExtractorDB.deleteById(id);
+          await renderExtractedLinks();
         } catch (err) {
           console.error('Error deleting page:', err);
         }
@@ -350,8 +350,8 @@ async function renderClippedPages() {
 
         try {
           const pagesToDelete = pages.filter(p => p.title === title);
-          await Promise.all(pagesToDelete.map(p => WebpageClipperDB.deletePage(p.id)));
-          await renderClippedPages();
+          await Promise.all(pagesToDelete.map(p => HyperlinkExtractorDB.deleteById(p.id)));
+          await renderExtractedLinks();
         } catch (err) {
           console.error('Error deleting group:', err);
         }
@@ -362,10 +362,10 @@ async function renderClippedPages() {
     updateSelectAllButtonText();
 
   } catch (error) {
-    console.error('Error rendering clipped pages:', error);
+    console.error('Error rendering extracted links:', error);
     clipContainer.innerHTML = `
       <div class="no-clips">
-        <p>Error loading clipped pages</p>
+        <p>Error loading extracted links</p>
         <p>${error.message}</p>
       </div>
     `;
@@ -377,9 +377,9 @@ async function drainPendingClips() {
   if (!pendingClips.length) return;
   for (const clip of pendingClips) {
     try {
-      await WebpageClipperDB.addPage(clip);
+      await HyperlinkExtractorDB.save(clip);
     } catch (err) {
-      console.error('Failed to add pending clip:', err);
+      console.error('Failed to add link:', err);
     }
   }
   // clear the queue
@@ -389,7 +389,7 @@ async function drainPendingClips() {
 // Initialize DB + render on load
 async function initialize() {
   try {
-    await WebpageClipperDB.init();
+    await HyperlinkExtractorDB.init();
     await drainPendingClips();
     
     //for settings related to copy type
@@ -451,7 +451,7 @@ async function initialize() {
       // Add event listener for select all button
       selectAllBtn.addEventListener('click', toggleSelectAll);
         
-    await renderClippedPages();
+    await renderExtractedLinks();
   } catch (error) {
     console.error('Error initializing database:', error);
     clipContainer.innerHTML = `
@@ -473,8 +473,8 @@ function getSelectedPrompt() {
 clearAllBtn.addEventListener('click', async () => {
   if (confirm('Are you sure you want to delete all clipped pages?')) {
     try {
-      await WebpageClipperDB.clearAllPages();
-      await renderClippedPages();
+      await HyperlinkExtractorDB.clearAll();
+      await renderExtractedLinks();
     } catch (error) {
       console.error('Error clearing pages:', error);
     }
@@ -486,11 +486,11 @@ chrome.runtime.onMessage.addListener((message, sender) => {
   if (message.action === 'newClip' && message.data) {
     (async () => {
       try {
-        await WebpageClipperDB.addPage(message.data);
-        await renderClippedPages();
+        await HyperlinkExtractorDB.save(message.data);
+        await renderExtractedLinks();
         await chrome.storage.local.set({ pendingClips: [] });
       } catch (error) {
-        console.error('Error adding new clip:', error);
+        console.error('Error adding new link:', error);
       }
     })();
   }
