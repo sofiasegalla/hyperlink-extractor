@@ -846,7 +846,7 @@ function getSelectedPrompt() {
 
 // Clear all pages
 clearAllBtn.addEventListener('click', async () => {
-  if (confirm('Are you sure you want to delete all clipped pages?')) {
+  if (confirm('Are you sure you want to delete all extracted links?')) {
     try {
       await HyperlinkExtractorDB.clearAll();
       await renderExtractedLinks();
