@@ -8,16 +8,13 @@
   <link rel="stylesheet" href="sidebar.css">
 </head>
 <body>
-  <div class="link-extractor-titlebar">
-    Link Extractor
-  </div>
-  <div id="promptSelectorContainer" class="settings-panel">
+  <div id="promptSelectorContainer" class="settings-panel prompt-row">
     <label for="promptSelector"><strong>Select a Prompt:</strong></label>
     <select id="promptSelector">
       <option value="">None</option>
-      <option value="Convert the list of links of information sources (not buttons) into APA style citations.">Convert to APA style citations</option>
+      <option value="Given the list of hyperlinks, convert each link into a properly formatted APA style citation.">Convert to APA style citations</option>
       <option value="Generate a concise summary of the content found at these links. Please state the title and link followed by the summary for each page.">Generate summary of links content</option>
-      <option value="Identify which of these links appear to be academic and reliable, and are particularly relevant to the current topic of my investigation. Be sure to give justification.">Evaluate links for academic reliability and relevance</option>
+      <option value="Given the list of hyperlinks, identify the ones that are academically reliable and relevant to the current topic of my investigation. Be sure to give justification.">Evaluate links for academic reliability and relevance</option>
       <option value="custom">Write your own</option>
     </select>
   
@@ -30,11 +27,11 @@
 
   <!-- Settings panel -->
   <div class="copy-mode-block">
-    <label style="min-width:80px;" for="copyModeSelect">Copy mode:</label>
+    <label style="min-width:80px;" for="copyModeSelect">Copy Format:</label>
     <select id="copyModeSelect">
-      <option value="urls">URLs only</option>
-      <option value="labels">[Text] URL</option>
-      <option value="full">Full text + URLs</option>
+      <option value="urls" title="Copy just the plain URL.">URLs only</option>
+      <option value="labels" title="Copy using '[Label] URL' format.">Link Title + URL</option>
+      <option value="full" title="Copy full text with inline hyperlinks.">Full Text + Embedded URLs</option>
     </select>
   
     <div class="autocopy-toggle-container">

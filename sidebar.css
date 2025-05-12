@@ -511,3 +511,22 @@ body {
   background-color: #ffff8c;
   padding: 2px 0;
 }
+
+.prompt-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.prompt-row label {
+  white-space: nowrap;
+  font-weight: bold;
+}
+
+#promptSelector {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  font-size: 1em;
+  border-radius: 6px;
+}
