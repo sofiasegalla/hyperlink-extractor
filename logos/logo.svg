@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg id="svg2" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <desc>Source: openclipart.org/detail/209545</desc>
+  <defs>
+    <linearGradient id="cursor-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0.1" stop-color="#2563eb" stop-opacity="0.9"/>
+      <stop offset="0.9" stop-color="#06b6d4" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="230" y1="100" x2="230" y2="220" id="gradient-1" gradientTransform="matrix(0.81505, 0, 0, 0.81505, 5.278528, 19.56903)">
+      <stop offset="0" style="stop-color: rgb(2.3529% 71.373% 83.137%)"/>
+      <stop offset="1" style="stop-color: rgb(75, 128, 240);"/>
+    </linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="130" y1="100" x2="130" y2="220" id="gradient-0" gradientTransform="matrix(0.81505, 0, 0, 0.81505, 5.278528, 19.56903)">
+      <stop offset="0" style="stop-color: rgb(75, 128, 240);"/>
+      <stop offset="1" style="stop-color: rgb(37, 99, 235);"/>
+    </linearGradient>
+  </defs>
+  <circle cx="151.297" cy="150.029" r="140.709" fill="#f8f9fa" stroke="#e0e4e8" stroke-width="2" style="stroke-width: 2.01;"/>
+  <path d="M 86.783 101.073 L 135.685 101.073 C 160.137 101.073 184.588 125.525 184.588 149.977 C 184.588 174.428 160.137 198.879 135.685 198.879 L 86.783 198.879 C 62.331 198.879 37.882 174.428 37.882 149.977 C 37.882 125.525 62.331 101.073 86.783 101.073 Z" stroke-width="30" stroke-linecap="round" fill="none" style="stroke: url(&quot;#gradient-0&quot;); stroke-width: 15.076;"/>
+  <g transform="matrix(1.787603, 0, 0, 1.847683, -471.419067, -257.141785)" style="">
+    <path d="M 310.241 190.24 L 340.241 190.24 C 355.241 190.24 370.241 205.24 370.241 220.24 C 370.241 235.24 355.241 250.24 340.241 250.24 L 310.241 250.24 C 295.241 250.24 280.241 235.24 280.241 220.24 C 280.241 205.24 295.241 190.24 310.241 190.24 Z" stroke="#475569" stroke-width="2" stroke-linejoin="round" style="stroke-width: 2; fill: rgba(255, 255, 255, 0);"/>
+    <path d="M 312.241 194.24 L 338.241 194.24 C 351.241 194.24 365.241 205.24 365.241 220.24 C 365.241 235.24 351.241 246.24 338.241 246.24 L 312.241 246.24 C 299.241 246.24 285.241 235.24 285.241 220.24 C 285.241 205.24 299.241 194.24 312.241 194.24 Z" stroke="#2563eb" stroke-width="0.8" stroke-opacity="0.3" stroke-linejoin="round" style="stroke-width: 0.8; fill: rgba(255, 255, 255, 0);"/>
+  </g>
+  <path d="M 168.289 101.073 L 217.19 101.073 C 241.642 101.073 266.093 125.525 266.093 149.977 C 266.093 174.428 241.642 198.879 217.19 198.879 L 168.289 198.879 C 143.838 198.879 119.386 174.428 119.386 149.977 C 119.386 125.525 143.838 101.073 168.289 101.073 Z" stroke-width="30" stroke-linecap="round" fill="none" style="stroke: url(&quot;#gradient-1&quot;); stroke-width: 15.076;"/>
+  <g transform="matrix(1.772436, 0, 0, 1.83187, -383.414001, -253.1436)" style="">
+    <path d="M 310.241 190.24 L 340.241 190.24 C 355.241 190.24 370.241 205.24 370.241 220.24 C 370.241 235.24 355.241 250.24 340.241 250.24 L 310.241 250.24 C 295.241 250.24 280.241 235.24 280.241 220.24 C 280.241 205.24 295.241 190.24 310.241 190.24 Z" stroke="#475569" stroke-width="2" stroke-linejoin="round" style="stroke-width: 2; fill: rgba(255, 255, 255, 0);"/>
+    <path d="M 312.241 194.24 L 338.241 194.24 C 351.241 194.24 365.241 205.24 365.241 220.24 C 365.241 235.24 351.241 246.24 338.241 246.24 L 312.241 246.24 C 299.241 246.24 285.241 235.24 285.241 220.24 C 285.241 205.24 299.241 194.24 312.241 194.24 Z" stroke="#2563eb" stroke-width="0.8" stroke-opacity="0.3" stroke-linejoin="round" style="stroke-width: 0.8; fill: rgba(255, 255, 255, 0);"/>
+  </g>
+  <g transform="matrix(1.005063, 0, 0, 1.005063, 23.827126, 19.654371)">
+    <path d="M 184.848 145.401 L 208.204 207.683 L 217.936 192.113 L 235.453 207.683 L 243.239 197.951 L 225.721 182.381 L 243.239 176.542 L 184.848 145.401 Z" fill="white" stroke="#475569" stroke-width="2.5" stroke-linejoin="round" style="stroke-width: 2.5;"/>
+    <path d="M 184.848 145.401 L 208.204 207.683 L 217.936 192.113 L 235.453 207.683 L 243.239 197.951 L 225.721 182.381 L 243.239 176.542 L 184.848 145.401 Z" fill="url(#cursor-gradient)" fill-opacity="0.85" stroke="none" style="stroke-width: 1;"/>
+    <path d="M 186.016 149.293 L 207.037 203.79 L 215.989 190.166 L 232.728 204.57 L 238.567 197.951 L 222.608 183.159 L 238.179 178.489 L 186.016 149.293 Z" fill="none" stroke="#2563eb" stroke-width="0.8" stroke-opacity="0.3" stroke-linejoin="round" style="stroke-width: 0.8;"/>
+    <path d="M 184.848 145.401 L 192.633 160.972 L 194.58 155.133 L 198.474 159.025 L 208.204 153.186 L 184.848 145.401 Z" fill="white" fill-opacity="0.25" stroke="none" style="stroke-width: 1;"/>
+    <path d="M 212.098 192.113 L 218.714 192.891 L 235.453 207.683 L 243.239 197.951 L 225.721 182.381 L 237.4 177.321 L 243.239 176.542 L 223.774 183.549 L 212.098 192.113 Z" fill="#252525" fill-opacity="0.15" stroke="none" style="stroke-width: 1;"/>
+  </g>
+</svg>
