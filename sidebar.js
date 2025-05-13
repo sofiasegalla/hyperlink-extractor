@@ -332,6 +332,8 @@ async function renderExtractedLinks() {
             // Click to scroll to content in the page
             snipDiv.addEventListener('click', () => {
               // Find this content in the original page
+              // debug
+              console.log("Snippet clicked", page, fullText);
               scrollToContentInPage(page, fullText);
             });
           }
@@ -396,6 +398,8 @@ async function renderExtractedLinks() {
         
         // Extract the execution script to a reusable function
         function executeScrollToContent(tabId, text) {
+          // debug
+          console.log("Injecting script into tab", tabId, text);
           chrome.scripting.executeScript({
             target: { tabId: tabId },
             func: findAndScrollToTextFunc,
@@ -405,6 +409,8 @@ async function renderExtractedLinks() {
         
         // Function to be injected into the page
         function findAndScrollToTextFunc(fullText) {
+          // debug
+          console.log("Injected script running. Looking for:", fullText);
           return new Promise((resolve) => {
             // Create several search options from different portions of the text
             // to increase chance of finding a match
@@ -779,37 +785,57 @@ async function initialize() {
     });
 
     // for prompt selector functionality
-      const promptSelector = document.getElementById('promptSelector');
-      const customPrompt = document.getElementById('customPrompt');
+    const promptSelector = document.getElementById('promptSelector');
+    const customPromptContainer = document.getElementById('customPromptContainer');
+    const customPrompt = document.getElementById('customPrompt');
+    const clearPromptBtn = document.getElementById('clearPromptBtn');
 
-      // Load saved prompt from storage on startup
-      const { savedPrompt = '' } = await chrome.storage.local.get({ savedPrompt: '' });
+    // Load saved prompt from storage on startup
+    const { savedPrompt = '' } = await chrome.storage.local.get({ savedPrompt: '' });
+    const defaultPrompts = [
+      'Given the list of hyperlinks, convert each link into a properly formatted APA style citation.',
+      'Generate a concise summary of the content found at these links. Please state the title and link followed by the summary for each page.',
+      'Given the list of hyperlinks, identify the ones that are academically reliable and relevant to the current topic of my investigation. Be sure to give justification.'
+    ];
+    if (savedPrompt && !defaultPrompts.includes(savedPrompt)) {
+      promptSelector.style.display = 'none';
+      customPromptContainer.style.display = '';
+      customPrompt.value = savedPrompt;
+    } else {
+      promptSelector.value = savedPrompt;
+      promptSelector.style.display = '';
+      customPromptContainer.style.display = 'none';
+      customPrompt.value = '';
+    }
 
-      if (savedPrompt && ![...['Convert the list of links into APA style citations.', 'Generate a concise summary of the content found at these links.', 'Identify which of these links appear to be academic and reliable, and are particularly relevant to the current topic of investigation.']].includes(savedPrompt)) {
-        promptSelector.style.display = 'none'; customPrompt.style.display = 'block'; customPrompt.value = savedPrompt;
-      } else {
-        promptSelector.value = savedPrompt;
+    // Handle dropdown → custom input
+    promptSelector.addEventListener('change', () => {
+      if (promptSelector.value === 'custom') {
+        promptSelector.style.display = 'none';
+        customPromptContainer.style.display = '';
+        customPrompt.focus();
       }
+      chrome.storage.local.set({ savedPrompt: getSelectedPrompt() });
+    });
 
-      // Handle dropdown → custom input
-      promptSelector.addEventListener('change', () => {
-        if (promptSelector.value === 'custom') {
-          promptSelector.style.display = 'none';
-          customPrompt.style.display = 'block';
-          customPrompt.focus();
-        }
-        chrome.storage.local.set({ savedPrompt: getSelectedPrompt() });
-      });
+    // Handle custom input → revert back to dropdown if blank (on blur)
+    customPrompt.addEventListener('blur', () => {
+      if (customPrompt.value.trim() === '') {
+        customPromptContainer.style.display = 'none';
+        promptSelector.style.display = '';
+        promptSelector.value = '';
+      }
+      chrome.storage.local.set({ savedPrompt: getSelectedPrompt() });
+    });
 
-      // Handle custom input → revert back to dropdown if blank
-      customPrompt.addEventListener('blur', () => {
-        if (customPrompt.value.trim() === '') {
-          customPrompt.style.display = 'none';
-          promptSelector.style.display = 'inline-block';
-          promptSelector.value = '';
-        }
-        chrome.storage.local.set({ savedPrompt: getSelectedPrompt() });
-      });
+    // Handle Clear button
+    clearPromptBtn.addEventListener('click', () => {
+      customPrompt.value = '';
+      customPromptContainer.style.display = 'none';
+      promptSelector.value = '';
+      promptSelector.style.display = '';
+      chrome.storage.local.set({ savedPrompt: '' });
+    });
 
       // for auto-copy toggle
       const autoCopyToggle = document.getElementById('autoCopyToggle');
