@@ -27,6 +27,9 @@ html, body, * {
   display: flex;
   gap: 16px;
   align-items: stretch;
+  width: 100%;
+  flex-wrap: nowrap;
+  position: relative;
 }
 
 .copy-format-box,
@@ -36,13 +39,14 @@ html, body, * {
 }
 
 .copy-format-box {
-  flex: 2 1 0;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
   min-width: 120px;
-  max-width: 220px;
+  max-width: none;
+  width: auto;
 }
 
 .copy-format-box select {
@@ -55,13 +59,14 @@ html, body, * {
 }
 
 .autocopy-box {
-  flex: 1 1 0;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   min-width: 110px;
   max-width: 160px;
+  margin-left: auto;
   padding-left: 0;
   padding-right: 0;
 }
