@@ -8,8 +8,39 @@
   <link rel="stylesheet" href="sidebar.css">
 </head>
 <body>
-  <div id="promptSelectorContainer" class="settings-panel prompt-row">
-    <label for="promptSelector"><strong>Select a Prompt:</strong></label>
+  <div class="link-extractor-titlebar default-box" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+    <a href="https://sfang-cmd.github.io/hyperlink-extractor-landing-page/" target="_blank" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
+      <img src="logos/logo.svg" alt="Logo" style="max-height: 80px; width: auto; vertical-align: middle; cursor: pointer;" />
+      <span style="font-size: 1.1em; cursor: pointer;">Hyperlink Extractor</span>
+    </a>
+  </div>
+  <!-- Notification for copy -->
+  <div id="copyNotification" class="copy-notification" style="display:none;">Links copied to clipboard</div>
+
+  <!-- Settings panel -->
+  <div class="settings-row">
+    <div class="copy-format-box default-box">
+      <label class="settings-heading" for="copyModeSelect">Copy Format</label>
+      <select id="copyModeSelect">
+        <option value="urls" title="Copy just the plain URL.">URLs only</option>
+        <option value="labels" title="Copy using '[Label] URL' format.">Link Title + URL</option>
+        <option value="full" title="Copy full text with inline hyperlinks.">Full Text + Embedded URLs</option>
+      </select>
+    </div>
+    <div class="autocopy-box default-box">
+  <label class="settings-heading" for="autoCopyToggle">Auto-copy</label>
+      <div class="autocopy-toggle-container">
+        <label class="switch">
+          <input type="checkbox" id="autoCopyToggle" checked>
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prompt selector box (now below copy format) -->
+  <div id="promptSelectorContainer" class="default-box">
+    <label for="promptSelector" class="settings-heading"><strong>Select a Prompt</strong></label>
     <select id="promptSelector">
       <option value="">None</option>
       <option value="Given the list of hyperlinks, convert each link into a properly formatted APA style citation.">Convert to APA style citations</option>
@@ -19,40 +50,21 @@
     </select>
   
     <!-- This will replace the select when "Write your own" is chosen -->
-    <textarea id="customPrompt" placeholder="Enter your custom prompt..." style="display:none; width: 100%; margin-top: 8px;"></textarea>
-  </div>
-
-  <!-- Notification for copy -->
-  <div id="copyNotification" class="copy-notification" style="display:none;">Links copied to clipboard</div>
-
-  <!-- Settings panel -->
-  <div class="copy-mode-block">
-    <label style="min-width:80px;" for="copyModeSelect">Copy Format:</label>
-    <select id="copyModeSelect">
-      <option value="urls" title="Copy just the plain URL.">URLs only</option>
-      <option value="labels" title="Copy using '[Label] URL' format.">Link Title + URL</option>
-      <option value="full" title="Copy full text with inline hyperlinks.">Full Text + Embedded URLs</option>
-    </select>
-  
-    <div class="autocopy-toggle-container">
-      <label class="switch">
-        <input type="checkbox" id="autoCopyToggle" checked>
-        <span class="slider round"></span>
-      </label>
-      <span style="margin-left:8px; font-size:1em;">Auto-copy</span>
+    <div id="customPromptContainer" style="display:none; width: 100%; margin-top: 8px;">
+      <textarea id="customPrompt" placeholder="Enter your custom prompt..." style="width: 80%; display: inline-block;"></textarea>
+      <button id="clearPromptBtn" class="clear-btn" style="margin-left: 8px; vertical-align: top;">Reset</button>
     </div>
-  </div>
-  
-  <!-- original selected links button -->
-  <button id="copySelectedBtn" class="copy-selected-btn" style="margin-top: 10px;">
-    Copy Selected Links
-  </button>
 
-  <div class="extracted-hyperlinks-bar">
-    <span class="extracted-hyperlinks-title">Extracted Hyperlinks</span>
-    <div>
-      <button id="selectAllBtn" class="select-all-btn">Select All</button>
-      <button id="clearAllBtn" class="clear-btn">Delete All</button>
+  </div>
+
+  <div class="default-box">
+    <label class="settings-heading" for="extractActions" style="margin-bottom: 10px;">Extract Hyperlinks</label>
+    <div id="extractActions" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+      <div style="display: flex; flex-direction: row; gap: 12px; width: 100%;">
+        <button id="selectAllBtn" class="buttons" style="width: 100%;">Select All</button>
+        <button id="clearAllBtn" class="buttons" style="width: 100%; background-color: #e74c3c;">Delete All</button>
+      </div>
+      <button id="copySelectedBtn" class="buttons" style="width: 100%;">Copy Selected Links</button>
     </div>
   </div>
 
