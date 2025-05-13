@@ -8,10 +8,10 @@
   <link rel="stylesheet" href="sidebar.css">
 </head>
 <body>
-  <div class="link-extractor-titlebar default-box" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-    <a href="https://sfang-cmd.github.io/hyperlink-extractor-landing-page/" target="_blank" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
-      <img src="logos/logo.svg" alt="Logo" style="max-height: 80px; width: auto; vertical-align: middle; cursor: pointer;" />
-      <span style="font-size: 1.1em; cursor: pointer;">Hyperlink Extractor</span>
+  <div class="logo-header">
+    <a href="https://sfang-cmd.github.io/hyperlink-extractor-landing-page/" target="_blank" style="text-decoration: none; color: inherit;">
+      <img src="logos/logo.svg" alt="Logo" class="centered-logo" />
+      <div class="logo-title">Hyperlink Extractor</div>
     </a>
   </div>
   <!-- Notification for copy -->
@@ -58,13 +58,13 @@
   </div>
 
   <div class="default-box">
-    <label class="settings-heading" for="extractActions" style="margin-bottom: 10px;">Extract Hyperlinks</label>
+    <label class="settings-heading" for="extractActions" style="margin-bottom: 10px;">Manage Hyperlinks</label>
     <div id="extractActions" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
       <div style="display: flex; flex-direction: row; gap: 12px; width: 100%;">
-        <button id="selectAllBtn" class="buttons" style="width: 100%;">Select All</button>
+        <button id="selectAllBtn" class="buttons" style="width: 100%; background-color: #5BC0BE">Select All</button>
         <button id="clearAllBtn" class="buttons" style="width: 100%; background-color: #e74c3c;">Delete All</button>
       </div>
-      <button id="copySelectedBtn" class="buttons" style="width: 100%;">Copy Selected Links</button>
+      <button id="copySelectedBtn" class="buttons" style="width: 100%;">Copy Selected Links with Prompt</button>
     </div>
   </div>
 

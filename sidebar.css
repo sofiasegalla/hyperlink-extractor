@@ -575,5 +575,25 @@ body {
   background-color: #d0d0d0;
 }
 
+.logo-header {
+  text-align: center;
+  margin: 12px 0 20px 0;
+}
+
+.centered-logo {
+  max-height: 80px;
+  width: auto;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+}
+
+.logo-title {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #2e3a59; 
+  margin-top: 6px;
+}
+
 
 
